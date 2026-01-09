@@ -152,7 +152,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             <MapContainer
                 center={[36.0, 138.0]}
                 zoom={5}
-                style={{ width: '100%', height: '100%', background: '#0a0a0a' }}
+                style={{ width: '100%', height: '100%', background: 'transparent' }} // Let CSS control background
                 zoomControl={false}
             >
                 <MapController />
@@ -188,9 +188,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                             key={line.id}
                             positions={line.path}
                             pathOptions={{
-                                color: isInterconnectionActive ? '#d946ef' : (isHighLoad ? '#f87171' : (line.voltage === 'HVDC' ? '#ec4899' : '#3b82f6')),
-                                weight: (line.voltage === '500kV' ? 3 : 1) * (isActive ? 1.5 : 1.0),
-                                opacity: isActive ? 1.0 : 0.5, // Increased base opacity for visibility
+                                color: isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa')), // Lighter colors
+                                weight: (line.voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0), // Thicker lines
+                                opacity: isActive ? 1.0 : 0.6,
                                 className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
                             }}
                         />
@@ -296,7 +296,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.1</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
