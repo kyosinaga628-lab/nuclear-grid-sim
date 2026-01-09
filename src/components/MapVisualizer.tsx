@@ -83,12 +83,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             { id: 'chugoku-kyushu', from: 'chugoku', to: 'kyushu', cap: 2500 } // And reverse
         ];
 
-        // Simple Heuristic: Sweep from East to West, then West to East twice to equilibrate
-        for (let i = 0; i < 2; i++) {
+        // Simple Heuristic: Sweep multiple times to allow multi-hop propagation (e.g. Hokkaido -> Tohoku -> Tokyo)
+        for (let i = 0; i < 4; i++) {
             // Logic: If From has Surplus AND To has Deficit, move power.
-            // OR: If From has HUGE Surplus, push it downstream regardless? No, only pull if needed or if arbitrage.
-            // Let's stick to "Pull if Deficit" first to keep sufficiency high.
-
             interconnections.forEach(conn => {
                 const fromBal = regionalBalance[conn.from].balance;
                 const toBal = regionalBalance[conn.to].balance;
@@ -102,12 +99,12 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 }
             });
 
-            // Reverse direction check (Manual for bidirectional logical links if not explicitly defined above)
-            // e.g. Kyushu -> Chugoku
+            // Reverse direction check
             const reversePairs = [
-                { id: 'chugoku-kyushu', A: 'kyushu', B: 'chugoku', cap: 2500 }, // reused line id but flow is neg? simpler to just check pairs
+                { id: 'chugoku-kyushu', A: 'kyushu', B: 'chugoku', cap: 2500 },
                 { id: 'kansai-chugoku', A: 'chugoku', B: 'kansai', cap: 3000 },
                 { id: 'fc-tokyo-chubu', A: 'chubu', B: 'tokyo', cap: 2100 },
+                // Add potential reverse flows for North-South as well if needed (e.g. Tohoku -> Hokkaido unlikely but possible)
             ];
 
             reversePairs.forEach(pair => {
@@ -116,9 +113,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
                 if (fromBal > 0 && toBal < 0) {
                     const amount = Math.min(fromBal, -toBal, pair.cap);
-                    // For visualization, we might want to track direction. 
-                    // For now, positive flow ID means "Active"
-                    flows[pair.id] = (flows[pair.id] || 0) + amount;
+                    // Negative flow ID signifies reverse direction for visualization
+                    flows[pair.id] = (flows[pair.id] || 0) - amount;
                     regionalBalance[pair.A].balance -= amount;
                     regionalBalance[pair.B].balance += amount;
                 }
@@ -173,10 +169,18 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     );
 
                     // Check if it's an active interconnection
-                    const flowAmount = line.interconnectionId ? gridState.flows[line.interconnectionId] : 0;
-                    const isInterconnectionActive = flowAmount && flowAmount > 10; // Threshold
+                    const rawFlow = line.interconnectionId ? gridState.flows[line.interconnectionId] : 0;
+                    const flowAmount = Math.abs(rawFlow || 0);
+                    const isInterconnectionActive = flowAmount > 10;
+
+                    // Direction: rawFlow > 0 is Forward, < 0 is Reverse
+                    const isReverse = (rawFlow || 0) < 0;
 
                     const isActive = connectedActive || isInterconnectionActive;
+
+                    // Determine class: flow forward or reverse
+                    let animClass = 'line-flow';
+                    if (isInterconnectionActive && isReverse) animClass = 'line-flow-reverse';
 
                     return (
                         <Polyline
@@ -186,7 +190,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                 color: isInterconnectionActive ? '#d946ef' : (isHighLoad ? '#f87171' : (line.voltage === 'HVDC' ? '#ec4899' : '#3b82f6')),
                                 weight: (line.voltage === '500kV' ? 3 : 1) * (isActive ? 1.5 : 1.0),
                                 opacity: isActive ? 0.9 : 0.3,
-                                className: `line-flow ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
+                                className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
                             }}
                         />
                     );
@@ -197,9 +201,12 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     .line-flow {
                         animation-duration: ${flowSpeed}s !important;
                     }
-                    .line-flow.high-load {
+                    .line-flow.high-load, .line-flow-reverse.high-load {
                         animation-duration: ${flowSpeed / 2}s !important;
                         animation-timing-function: linear;
+                    }
+                    .line-flow-reverse {
+                        animation-duration: ${flowSpeed}s !important;
                     }
                     .hub-marker.insufficient {
                         animation: pulse-red 1.5s infinite alternate;

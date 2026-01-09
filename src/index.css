@@ -193,7 +193,19 @@ body {
   filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5));
 }
 
-.line-flow.high-load {
+.line-flow-reverse {
+  stroke-dasharray: 10, 10;
+  animation: flow-reverse 1s linear infinite;
+  filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5));
+}
+
+@keyframes flow-reverse {
+  to {
+    stroke-dashoffset: 20;
+  }
+}
+
+.line-flow.high-load, .line-flow-reverse.high-load {
   filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
   stroke: #f87171 !important;
 }
