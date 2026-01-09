@@ -159,6 +159,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                     url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    opacity={0.9} // Slight transparency to let the lighter background bleed through if needed, or just keep it solid
                 />
 
                 {/* Grid Lines */}
@@ -189,7 +190,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                             pathOptions={{
                                 color: isInterconnectionActive ? '#d946ef' : (isHighLoad ? '#f87171' : (line.voltage === 'HVDC' ? '#ec4899' : '#3b82f6')),
                                 weight: (line.voltage === '500kV' ? 3 : 1) * (isActive ? 1.5 : 1.0),
-                                opacity: isActive ? 0.9 : 0.3,
+                                opacity: isActive ? 1.0 : 0.5, // Increased base opacity for visibility
                                 className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
                             }}
                         />
