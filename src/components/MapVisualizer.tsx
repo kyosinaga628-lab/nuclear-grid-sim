@@ -188,9 +188,10 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                             key={line.id}
                             positions={line.path}
                             pathOptions={{
-                                color: isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa')), // Lighter colors
-                                weight: (line.voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0), // Thicker lines
+                                color: isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa')),
+                                weight: (line.voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0),
                                 opacity: isActive ? 1.0 : 0.6,
+                                dashArray: '10 20', // Explicitly set dash pattern (10px dash, 20px gap) here to ensure it's not solid
                                 className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
                             }}
                         />
@@ -201,6 +202,23 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 <style>{`
                     .line-flow {
                         animation-duration: ${flowSpeed}s !important;
+                    }
+                    /* Ensure CSS knows the pattern length for smooth looping */
+                    .line-flow, .line-flow-reverse {
+                         stroke-dasharray: 10 20; 
+                    }
+                    @keyframes flow {
+                        from { stroke-dashoffset: 30; } /* 10+20=30px cycle */
+                        to { stroke-dashoffset: 0; }
+                    }
+                    @keyframes flow-reverse {
+                        from { stroke-dashoffset: 0; }
+                        to { stroke-dashoffset: 30; }
+                    }
+                    
+                    .line-flow.high-load, .line-flow-reverse.high-load {
+                        animation-duration: ${flowSpeed / 2}s !important;
+                        animation-timing-function: linear;
                     }
                     .line-flow.high-load, .line-flow-reverse.high-load {
                         animation-duration: ${flowSpeed / 2}s !important;
