@@ -193,15 +193,19 @@ body {
 }
 
 .line-flow {
-  /* [Dash, Gap] - Larger gap makes "beads" more distinct */
-  stroke-dasharray: 12, 12;
-  animation: flow 1.5s linear infinite;
+  /* [Dash, Gap] - Asymmetric (8px dash, 16px gap) makes direction clearer */
+  /* Total cycle = 24px */
+  stroke-dasharray: 8 16;
+  animation: flow 1.0s linear infinite;
+  stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.6));
 }
 
 .line-flow-reverse {
-  stroke-dasharray: 12, 12;
-  animation: flow-reverse 1.5s linear infinite;
+  /* Asymmetric dash for reverse flow */
+  stroke-dasharray: 8 16;
+  animation: flow-reverse 1.0s linear infinite;
+  stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(217, 70, 239, 0.6));
 }
 
