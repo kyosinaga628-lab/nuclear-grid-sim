@@ -296,8 +296,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid</h1>
-                <div style={{ fontSize: '0.9rem', color: '#aaa', marginBottom: '16px' }}>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2</span></h1>
+                <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
 
