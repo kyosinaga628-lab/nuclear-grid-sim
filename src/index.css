@@ -194,16 +194,17 @@ body {
 
 .line-flow {
   /* [Dash, Gap] - 10px dash, 20px gap = 30px cycle (Matched with MapVisualizer) */
-  stroke-dasharray: 10 20;
-  animation: flow 1s linear infinite;
+  /* Using !important to force Leaflet SVG override */
+  stroke-dasharray: 10 20 !important;
+  animation: flow 1s linear infinite !important;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.6));
 }
 
 .line-flow-reverse {
   /* Asymmetric dash for reverse flow */
-  stroke-dasharray: 10 20;
-  animation: flow-reverse 1s linear infinite;
+  stroke-dasharray: 10 20 !important;
+  animation: flow-reverse 1s linear infinite !important;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(217, 70, 239, 0.6));
 }

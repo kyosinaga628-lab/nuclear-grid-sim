@@ -191,7 +191,6 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                 color: isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa')),
                                 weight: (line.voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0),
                                 opacity: isActive ? 1.0 : 0.6,
-                                dashArray: '10 20', // Explicitly set dash pattern (10px dash, 20px gap) here to ensure it's not solid
                                 className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
                             }}
                         />
@@ -305,7 +304,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.1</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.2</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
