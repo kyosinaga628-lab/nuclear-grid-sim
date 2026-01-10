@@ -50,10 +50,6 @@ const MovingPolyline: React.FC<{
         const totalCycle = 30; // 10px dash + 20px gap
 
         const animate = () => {
-            // Calculate speed px/frame. 60fps assumption.
-            // flowSpeed is in seconds per cycle? Previous CSS was duration based.
-            // If duration was 1.0s, then 30px per second.
-            // We want roughly that visual speed.
             const speedPxPerFrame = (30 / (flowSpeed * 60)) * 1.5;
 
             if (isReverse) {
@@ -65,7 +61,10 @@ const MovingPolyline: React.FC<{
             // Keep offset bounded to avoid huge numbers
             if (Math.abs(offset) > totalCycle) offset = 0;
 
-            const el = lineRef.current.getElement();
+            // Access Leaflet's internal SVG path element (_path)
+            const leafletLayer = lineRef.current;
+            const el = leafletLayer?._path || leafletLayer?.getElement?.();
+
             if (el) {
                 el.style.strokeDashoffset = `${offset}`;
                 el.style.strokeDasharray = '10 20';
@@ -74,9 +73,13 @@ const MovingPolyline: React.FC<{
             animationFrameId = requestAnimationFrame(animate);
         };
 
-        animate();
+        // Small delay to ensure the element is rendered
+        const timeoutId = setTimeout(() => animate(), 50);
 
-        return () => cancelAnimationFrame(animationFrameId);
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+            clearTimeout(timeoutId);
+        };
     }, [isActive, isReverse, flowSpeed]);
 
     return (
