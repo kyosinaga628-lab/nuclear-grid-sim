@@ -5,36 +5,50 @@ interface ControlPanelProps {
     plants: Plant[];
     onTogglePlant: (id: string) => void;
     gridLoad: number;
+    onSetGridLoad: (load: number) => void;
     onSetAllActive: () => void;
     onReset: () => void;
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ plants, onTogglePlant, gridLoad, onSetAllActive, onReset }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ plants, onTogglePlant, gridLoad, onSetGridLoad, onSetAllActive, onReset }) => {
     return (
         <div className="panel control-panel">
             <h2>Control Center</h2>
 
             <div className="control-section">
-                <h3>Grid Load</h3>
+                <h3>Grid Load (Demand)</h3>
                 <div className="slider-container">
+                    <input
+                        type="range"
+                        min="10"
+                        max="150"
+                        value={gridLoad}
+                        onChange={(e) => onSetGridLoad(Number(e.target.value))}
+                        style={{
+                            width: '100%',
+                            accentColor: gridLoad > 100 ? '#f87171' : gridLoad > 80 ? '#facc15' : '#3b82f6',
+                            cursor: 'pointer'
+                        }}
+                    />
                     <div style={{
-                        width: '100%',
-                        height: '6px',
-                        background: '#333',
-                        borderRadius: '3px',
-                        position: 'relative',
-                        marginBottom: '8px'
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '0.8rem',
+                        color: '#888',
+                        marginTop: '4px'
                     }}>
-                        <div style={{
-                            width: `${gridLoad}%`,
-                            height: '100%',
-                            background: gridLoad > 80 ? '#f87171' : '#3b82f6',
-                            borderRadius: '3px',
-                            transition: 'width 0.3s ease, background 0.3s ease'
-                        }} />
+                        <span>Low</span>
+                        <span style={{
+                            color: gridLoad > 100 ? '#f87171' : gridLoad > 80 ? '#facc15' : '#3b82f6',
+                            fontWeight: 'bold',
+                            fontSize: '1rem'
+                        }}>
+                            {gridLoad}%
+                        </span>
+                        <span>High</span>
                     </div>
-                    <div className="slider-value" style={{ textAlign: 'right', fontSize: '0.9rem', color: gridLoad > 80 ? '#f87171' : '#aaa' }}>
-                        {gridLoad}% (Simulated)
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '4px', textAlign: 'center' }}>
+                        {gridLoad > 100 ? '⚠️ 需要過多（電力不足リスク）' : gridLoad > 80 ? '⚡ 高負荷状態' : '✅ 安定供給'}
                     </div>
                 </div>
             </div>

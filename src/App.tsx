@@ -43,6 +43,7 @@ function App() {
           plants={plants}
           onTogglePlant={handleTogglePlant}
           gridLoad={gridLoad}
+          onSetGridLoad={setGridLoad}
           onSetAllActive={handleSetAllActive}
           onReset={handleReset}
         />

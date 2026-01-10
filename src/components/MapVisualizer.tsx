@@ -246,17 +246,40 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
                     const isActive = connectedActive || isInterconnectionActive;
 
+                    // Determine line color based on flow state
+                    let lineColor = line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa'; // Default: pink for HVDC, blue for AC
+                    if (isInterconnectionActive) {
+                        lineColor = '#e879f9'; // Purple for active interconnection
+                    } else if (isHighLoad) {
+                        lineColor = '#fca5a5'; // Light red for high load
+                    }
+
                     return (
-                        <MovingPolyline
-                            key={line.id}
-                            positions={line.path}
-                            isActive={isActive}
-                            isReverse={isReverse}
-                            isHighLoad={isHighLoad || isInterconnectionActive}
-                            voltage={line.voltage}
-                            flowSpeed={flowSpeed}
-                            baseColor={isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa'))}
-                        />
+                        <React.Fragment key={line.id}>
+                            <MovingPolyline
+                                positions={line.path}
+                                isActive={isActive}
+                                isReverse={isReverse}
+                                isHighLoad={isHighLoad || isInterconnectionActive}
+                                voltage={line.voltage}
+                                flowSpeed={flowSpeed}
+                                baseColor={lineColor}
+                            />
+                            {/* Show flow amount tooltip for interconnection lines */}
+                            {isInterconnectionActive && (
+                                <CircleMarker
+                                    center={line.path[Math.floor(line.path.length / 2)]}
+                                    radius={0}
+                                    pathOptions={{ opacity: 0 }}
+                                >
+                                    <Tooltip permanent direction="center" className="flow-tooltip" opacity={0.9}>
+                                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#e879f9', textAlign: 'center' }}>
+                                            {isReverse ? '◀' : '▶'} {Math.round(flowAmount).toLocaleString()} MW
+                                        </div>
+                                    </Tooltip>
+                                </CircleMarker>
+                            )}
+                        </React.Fragment>
                     );
                 })}
 
@@ -281,6 +304,19 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     }
                     .hub-label-tooltip .leaflet-tooltip-tip {
                         border-top-color: rgba(0,0,0,0.7) !important;
+                    }
+                    .flow-tooltip {
+                        background-color: rgba(0,0,0,0.8) !important;
+                        border: 1px solid #e879f9 !important;
+                        color: #e879f9 !important;
+                        font-weight: bold;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                        font-size: 9px;
+                    }
+                    .flow-tooltip .leaflet-tooltip-tip {
+                        display: none;
                     }
                     .high-load-line {
                         filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
@@ -347,7 +383,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             {/* Info Overlay */}
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.4</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.5</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
