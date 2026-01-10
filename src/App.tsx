@@ -61,9 +61,9 @@ function App() {
       case 1:
         tutorialContent = (
           <TutorialGuide
-            step={0} totalSteps={4}
+            step={0} totalSteps={5}
             title="1. 発電所を選択"
-            description="地図上の原子力発電所（⚡️アイコン）をクリックしてください。詳細情報が表示されます。"
+            description="地図上の円形の発電所マーカーをクリックしてください。詳細情報が表示されます。"
             onSkip={() => setTutorialStep(0)}
             onNext={() => { }}
             nextLabel=""
@@ -73,9 +73,9 @@ function App() {
       case 2:
         tutorialContent = (
           <TutorialGuide
-            step={1} totalSteps={4}
+            step={1} totalSteps={5}
             title="2. 稼働状況を切替"
-            description="もう一度クリックするか、STARTボタンを押して稼働状況を切り替えてみましょう。"
+            description="もう一度クリックするか、詳細パネルのSTARTボタンを押して稼働状況を切り替えてみましょう。"
             onSkip={() => setTutorialStep(0)}
             onNext={() => setTutorialStep(3)}
             nextLabel="次へ"
@@ -85,19 +85,31 @@ function App() {
       case 3:
         tutorialContent = (
           <TutorialGuide
-            step={2} totalSteps={4}
+            step={2} totalSteps={5}
             title="3. 電力需要を調整"
             description="左側のパネルにある「Grid Load」スライダーを動かして、電力需要を変化させてみましょう。"
             onSkip={() => setTutorialStep(0)}
-            onNext={() => { }}
-            nextLabel=""
+            onNext={() => setTutorialStep(4)}
+            nextLabel="次へ"
           />
         );
         break;
       case 4:
         tutorialContent = (
           <TutorialGuide
-            step={3} totalSteps={4}
+            step={3} totalSteps={5}
+            title="4. リアルタイム統計"
+            description="Grid Statisticsパネルで、CO2削減量や経済効果のリアルタイム計算を確認できます。"
+            onSkip={() => setTutorialStep(0)}
+            onNext={() => setTutorialStep(5)}
+            nextLabel="次へ"
+          />
+        );
+        break;
+      case 5:
+        tutorialContent = (
+          <TutorialGuide
+            step={4} totalSteps={5}
             title="完了！"
             description="基本操作は以上です。自由にシミュレーションを行って、電力融通の変化などを観察してください。"
             onSkip={() => setTutorialStep(0)}
@@ -116,7 +128,8 @@ function App() {
 
       <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '8px', zIndex: 2000 }}>
         <button
-          className="help-button" style={{ position: 'static' }}
+          className={`help-button ${tutorialStep === 0 && !isHelpOpen ? 'help-button-attention' : ''}`}
+          style={{ position: 'static' }}
           onClick={startTutorial}
           title="チュートリアルを開始"
         >
@@ -132,7 +145,7 @@ function App() {
       </div>
 
       <div className="sidebar">
-        <StatisticsBoard plants={plants} gridLoad={gridLoad} />
+        <StatisticsBoard plants={plants} gridLoad={gridLoad} highlight={tutorialStep === 4} />
         <ControlPanel
           plants={plants}
           onTogglePlant={handleTogglePlant}

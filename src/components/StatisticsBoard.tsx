@@ -4,11 +4,12 @@ import { type Plant } from '../data/plants';
 interface StatisticsBoardProps {
     plants: Plant[];
     gridLoad: number; // 0-100, affects demand simulation
+    highlight?: boolean;
 }
 
 const TOTAL_DEMAND_BASE = 40000; // MW base demand assumption
 
-const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad }) => {
+const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, highlight }) => {
 
     // State for accumulated values (Real-time simulation)
     const [accumulated, setAccumulated] = React.useState({ co2: 0, cost: 0 });
@@ -59,7 +60,7 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad }) =
     }, [plants, gridLoad]);
 
     return (
-        <div className="panel stats-board">
+        <div className={`panel stats-board ${highlight ? 'tutorial-highlight' : ''}`}>
             <h2>Grid Statistics</h2>
 
             <div className="stat-card">
