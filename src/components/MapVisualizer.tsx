@@ -362,91 +362,91 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             </MapContainer>
 
             {/* Info Overlay */}
+            {/* Info Overlay */}
             <div className="overlay-ui">
-                <div className="overlay-ui">
-                    <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.4</span></h1>
-                    <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
-                        Live visualization of nuclear power capacity and transmission topology.
-                    </div>
-
-                    {currentSelectedPlant ? (
-                        <div className="plant-card">
-                            <h2 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>{currentSelectedPlant.name}</h2>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <div className={`status-badge ${getStatusClass(currentSelectedPlant.status)}`}>
-                                    {currentSelectedPlant.status}
-                                </div>
-                                <button
-                                    onClick={() => onTogglePlant(currentSelectedPlant.id)}
-                                    style={{
-                                        background: currentSelectedPlant.status === 'Active' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-                                        color: currentSelectedPlant.status === 'Active' ? '#f87171' : '#4ade80',
-                                        border: currentSelectedPlant.status === 'Active' ? '1px solid #f87171' : '1px solid #4ade80',
-                                        padding: '4px 12px',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {currentSelectedPlant.status === 'Active' ? 'STOP' : 'START'}
-                                </button>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem' }}>
-                                <div>
-                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>Operator</div>
-                                    <div>{currentSelectedPlant.operator}</div>
-                                </div>
-                                <div>
-                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>Capacity</div>
-                                    <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{currentSelectedPlant.capacity} MW</div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="plant-card" style={{ opacity: 0.6, fontStyle: 'italic' }}>
-                            Click a power plant node to view details.
-                        </div>
-                    )}
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.4</span></h1>
+                <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
+                    Live visualization of nuclear power capacity and transmission topology.
                 </div>
 
-                {/* Legend Overlay */}
-                <div className="legend-ui">
-                    <h3>Legend</h3>
+                {currentSelectedPlant ? (
+                    <div className="plant-card">
+                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>{currentSelectedPlant.name}</h2>
 
-                    <div style={{ marginBottom: '10px' }}>
-                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Grid Status</div>
-                        <div className="legend-item">
-                            <div className="legend-line" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
-                            <span>Normal Load</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div className={`status-badge ${getStatusClass(currentSelectedPlant.status)}`}>
+                                {currentSelectedPlant.status}
+                            </div>
+                            <button
+                                onClick={() => onTogglePlant(currentSelectedPlant.id)}
+                                style={{
+                                    background: currentSelectedPlant.status === 'Active' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
+                                    color: currentSelectedPlant.status === 'Active' ? '#f87171' : '#4ade80',
+                                    border: currentSelectedPlant.status === 'Active' ? '1px solid #f87171' : '1px solid #4ade80',
+                                    padding: '4px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.8rem'
+                                }}
+                            >
+                                {currentSelectedPlant.status === 'Active' ? 'STOP' : 'START'}
+                            </button>
                         </div>
-                        <div className="legend-item">
-                            <div className="legend-line" style={{ background: '#f87171', boxShadow: '0 0 4px #f87171' }}></div>
-                            <span>High Stress (&gt;80%)</span>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem' }}>
+                            <div>
+                                <div style={{ color: '#888', fontSize: '0.8rem' }}>Operator</div>
+                                <div>{currentSelectedPlant.operator}</div>
+                            </div>
+                            <div>
+                                <div style={{ color: '#888', fontSize: '0.8rem' }}>Capacity</div>
+                                <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{currentSelectedPlant.capacity} MW</div>
+                            </div>
                         </div>
                     </div>
-
-                    <div style={{ marginBottom: '10px' }}>
-                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>City Power</div>
-                        <div className="legend-item">
-                            <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
-                            <span>Sufficient</span>
-                        </div>
-                        <div className="legend-item">
-                            <div className="legend-color-box" style={{ background: '#f87171' }}></div>
-                            <span>Insufficient</span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
-                            S: Supply (Received)<br />
-                            D: Demand (Base Load)
-                        </div>
+                ) : (
+                    <div className="plant-card" style={{ opacity: 0.6, fontStyle: 'italic' }}>
+                        Click a power plant node to view details.
                     </div>
-                </div>
-
+                )}
             </div>
-            );
+
+            {/* Legend Overlay */}
+            <div className="legend-ui">
+                <h3>Legend</h3>
+
+                <div style={{ marginBottom: '10px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Grid Status</div>
+                    <div className="legend-item">
+                        <div className="legend-line" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
+                        <span>Normal Load</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="legend-line" style={{ background: '#f87171', boxShadow: '0 0 4px #f87171' }}></div>
+                        <span>High Stress (&gt;80%)</span>
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '10px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>City Power</div>
+                    <div className="legend-item">
+                        <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
+                        <span>Sufficient</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="legend-color-box" style={{ background: '#f87171' }}></div>
+                        <span>Insufficient</span>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
+                        S: Supply (Received)<br />
+                        D: Demand (Base Load)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    );
 };
 
-            export default MapVisualizer;
+export default MapVisualizer;
