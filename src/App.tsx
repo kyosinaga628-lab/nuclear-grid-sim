@@ -3,6 +3,7 @@ import MapVisualizer from './components/MapVisualizer';
 import ControlPanel from './components/ControlPanel';
 import StatisticsBoard from './components/StatisticsBoard';
 import HelpModal from './components/HelpModal';
+import TutorialGuide from './components/TutorialGuide';
 import { plants as initialPlants, type Plant } from './data/plants';
 import './dashboard.css';
 
@@ -11,17 +12,35 @@ function App() {
   const [gridLoad, setGridLoad] = useState<number>(50); // %
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
 
+  // Tutorial State
+  const [tutorialStep, setTutorialStep] = useState<number>(0);
+
+  const startTutorial = () => {
+    setTutorialStep(1);
+    setIsHelpOpen(false);
+    setPlants(initialPlants);
+    setGridLoad(50);
+  };
+
   const handleTogglePlant = (id: string) => {
     setPlants(currentPlants =>
       currentPlants.map(p => {
         if (p.id === id) {
-          // Toggle logic: If Active -> Suspended, If Suspended -> Active
           const newStatus = p.status === 'Active' ? 'Suspended' : 'Active';
           return { ...p, status: newStatus };
         }
         return p;
       })
     );
+
+    if (tutorialStep === 1 || tutorialStep === 2) {
+      setTutorialStep(prev => prev + 1);
+    }
+  };
+
+  const handleSetGridLoad = (val: number) => {
+    setGridLoad(val);
+    if (tutorialStep === 3 && val !== 50) setTutorialStep(4);
   };
 
   const handleSetAllActive = () => {
@@ -35,17 +54,82 @@ function App() {
     setGridLoad(50);
   };
 
+  // Tutorial Content Logic
+  let tutorialContent = null;
+  if (tutorialStep > 0) {
+    switch (tutorialStep) {
+      case 1:
+        tutorialContent = (
+          <TutorialGuide
+            step={0} totalSteps={4}
+            title="1. 発電所を選択"
+            description="地図上の原子力発電所（⚡️アイコン）をクリックしてください。詳細情報が表示されます。"
+            onSkip={() => setTutorialStep(0)}
+            onNext={() => { }}
+            nextLabel=""
+          />
+        );
+        break;
+      case 2:
+        tutorialContent = (
+          <TutorialGuide
+            step={1} totalSteps={4}
+            title="2. 稼働状況を切替"
+            description="もう一度クリックするか、STARTボタンを押して稼働状況を切り替えてみましょう。"
+            onSkip={() => setTutorialStep(0)}
+            onNext={() => setTutorialStep(3)}
+            nextLabel="次へ"
+          />
+        );
+        break;
+      case 3:
+        tutorialContent = (
+          <TutorialGuide
+            step={2} totalSteps={4}
+            title="3. 電力需要を調整"
+            description="左側のパネルにある「Grid Load」スライダーを動かして、電力需要を変化させてみましょう。"
+            onSkip={() => setTutorialStep(0)}
+            onNext={() => { }}
+            nextLabel=""
+          />
+        );
+        break;
+      case 4:
+        tutorialContent = (
+          <TutorialGuide
+            step={3} totalSteps={4}
+            title="完了！"
+            description="基本操作は以上です。自由にシミュレーションを行って、電力融通の変化などを観察してください。"
+            onSkip={() => setTutorialStep(0)}
+            onNext={() => setTutorialStep(0)}
+            nextLabel="終了"
+          />
+        );
+        break;
+    }
+  }
+
   return (
     <div className="dashboard-layout">
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      {tutorialContent}
 
-      <button
-        className="help-button"
-        onClick={() => setIsHelpOpen(true)}
-        title="使い方ガイド"
-      >
-        ?
-      </button>
+      <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '8px', zIndex: 2000 }}>
+        <button
+          className="help-button" style={{ position: 'static' }}
+          onClick={startTutorial}
+          title="チュートリアルを開始"
+        >
+          🎓
+        </button>
+        <button
+          className="help-button" style={{ position: 'static' }}
+          onClick={() => setIsHelpOpen(true)}
+          title="使い方ガイド"
+        >
+          ?
+        </button>
+      </div>
 
       <div className="sidebar">
         <StatisticsBoard plants={plants} gridLoad={gridLoad} />
@@ -53,14 +137,20 @@ function App() {
           plants={plants}
           onTogglePlant={handleTogglePlant}
           gridLoad={gridLoad}
-          onSetGridLoad={setGridLoad}
+          onSetGridLoad={handleSetGridLoad}
           onSetAllActive={handleSetAllActive}
           onReset={handleReset}
+          highlightLoadControl={tutorialStep === 3}
         />
       </div>
 
       <div className="main-view">
-        <MapVisualizer plants={plants} gridLoad={gridLoad} onTogglePlant={handleTogglePlant} />
+        <MapVisualizer
+          plants={plants}
+          gridLoad={gridLoad}
+          onTogglePlant={handleTogglePlant}
+          highlightPlants={tutorialStep === 1}
+        />
       </div>
     </div>
   );

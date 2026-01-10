@@ -8,14 +8,15 @@ interface ControlPanelProps {
     onSetGridLoad: (load: number) => void;
     onSetAllActive: () => void;
     onReset: () => void;
+    highlightLoadControl?: boolean;
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ plants, onTogglePlant, gridLoad, onSetGridLoad, onSetAllActive, onReset }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ plants, onTogglePlant, gridLoad, onSetGridLoad, onSetAllActive, onReset, highlightLoadControl }) => {
     return (
         <div className="panel control-panel">
             <h2>Control Center</h2>
 
-            <div className="control-section">
+            <div className={`control-section ${highlightLoadControl ? 'tutorial-highlight' : ''}`}>
                 <h3>Grid Load (Demand)</h3>
                 <div className="slider-container">
                     <input

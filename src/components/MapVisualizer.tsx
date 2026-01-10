@@ -97,7 +97,7 @@ const MovingPolyline: React.FC<{
     );
 };
 
-const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant: (id: string) => void }> = ({ plants, gridLoad, onTogglePlant }) => {
+const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant: (id: string) => void, highlightPlants?: boolean }> = ({ plants, gridLoad, onTogglePlant, highlightPlants }) => {
     const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
 
     // Animation speed and load effects
@@ -384,7 +384,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                             fillColor: getStatusColor(plant.status),
                             fillOpacity: 0.8,
                             weight: 2,
-                            className: plant.status === 'Active' ? 'marker-active' : ''
+                            className: `station-marker ${plant.status === 'Active' ? 'marker-active' : ''} ${highlightPlants && (!selectedPlant || plant.id !== selectedPlant.id) ? 'tutorial-highlight' : ''}`
                         }}
                         radius={Math.sqrt(plant.capacity) / 2}
                         eventHandlers={{
