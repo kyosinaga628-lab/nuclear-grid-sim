@@ -202,33 +202,32 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     .line-flow {
                         animation-duration: ${flowSpeed}s !important;
                     }
+                        stroke-dasharray: 10 20 !important;
+                        animation: flow ${flowSpeed}s linear infinite !important;
+                        stroke-linecap: round;
+                        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.6));
+                        will-change: stroke-dashoffset;
+                    }
                     .line-flow-reverse {
-                        animation-duration: ${flowSpeed}s !important;
+                        stroke-dasharray: 10 20 !important;
+                        animation: flow-reverse ${flowSpeed}s linear infinite !important;
+                        stroke-linecap: round;
+                        filter: drop-shadow(0 0 3px rgba(217, 70, 239, 0.6));
+                        will-change: stroke-dashoffset;
                     }
                     
                     .line-flow.high-load, .line-flow-reverse.high-load {
                         animation-duration: ${flowSpeed / 2}s !important;
-                        animation-timing-function: linear;
+                        stroke: #f87171 !important;
+                        filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
                     }
-                    .line-flow.high-load, .line-flow-reverse.high-load {
-                        animation-duration: ${flowSpeed / 2}s !important;
-                        animation-timing-function: linear;
-                    }
-                    .line-flow-reverse {
-                        animation-duration: ${flowSpeed}s !important;
-                    }
+
                     .hub-marker.insufficient {
                         animation: pulse-red 1.5s infinite alternate;
                     }
                     @keyframes pulse-red {
-                        from {
-                            stroke-width: 3px;
-                            stroke-opacity: 1;
-                        }
-                        to {
-                            stroke-width: 5px;
-                            stroke-opacity: 0.6;
-                        }
+                        from { stroke-width: 3px; stroke-opacity: 1; }
+                        to { stroke-width: 5px; stroke-opacity: 0.6; }
                     }
                     .hub-label-tooltip {
                         background-color: rgba(0,0,0,0.7) !important;
@@ -304,7 +303,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.2</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.3</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
