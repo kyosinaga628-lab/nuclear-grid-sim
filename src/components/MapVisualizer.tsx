@@ -107,86 +107,133 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
     // Simulation Logic: Solve Grid Flow
     const gridState = useMemo(() => {
         // 1. Calculate Regional Balance (Generation - Demand)
-        const regionalBalance: Record<string, { gen: number, demand: number, balance: number }> = {};
+        const regionalBalance: Record<string, { gen: number, otherGen: number, demand: number, balance: number, sufficiency: number }> = {};
 
         // Initialize regions
         ['hokkaido', 'tohoku', 'tokyo', 'chubu', 'hokuriku', 'kansai', 'chugoku', 'shikoku', 'kyushu'].forEach(r => {
-            regionalBalance[r] = { gen: 0, demand: 0, balance: 0 };
+            regionalBalance[r] = { gen: 0, otherGen: 0, demand: 0, balance: 0, sufficiency: 0 };
         });
 
-        // Sum Generation per Region
+        // Sum Nuclear Generation per Region
         plants.forEach(p => {
             if (p.status === 'Active' && regionalBalance[p.regionId]) {
                 regionalBalance[p.regionId].gen += p.capacity;
             }
         });
 
-        // Sum Demand per Region (Adjusted by gridLoad)
+        // Sum Demand per Region & Estimate Non-Nuclear Supply
         consumptionHubs.forEach(h => {
             const currentDemand = h.baseDemand * (0.5 + (gridLoad / 100));
             if (regionalBalance[h.regionId]) {
                 regionalBalance[h.regionId].demand += currentDemand;
+                // SIMULATION ASSUMPTION:
+                // Non-nuclear sources (Thermal, Hydro, Solar) cover ~85% of base demand.
+                // Nuclear covers the rest + margin.
+                // This makes the nuclear availability critical for reaching 100%.
+                regionalBalance[h.regionId].otherGen += h.baseDemand * 0.85;
             }
         });
 
-        // Calculate Initial Balance
+        // Calculate Initial Balance & Sufficiency
         Object.keys(regionalBalance).forEach(r => {
-            regionalBalance[r].balance = regionalBalance[r].gen - regionalBalance[r].demand;
+            const rb = regionalBalance[r];
+            rb.balance = (rb.gen + rb.otherGen) - rb.demand;
+            rb.sufficiency = rb.demand > 0 ? (rb.gen + rb.otherGen) / rb.demand : 1.0;
         });
 
-        // 2. Interconnection Flow Simulation (Iterative Push)
-        // Deficit regions try to pull from Surplus regions via specific paths
+        // 2. Interconnection Flow Simulation (Relative Sufficiency Logic)
+        // Power flows from Higher Sufficiency region to Lower Sufficiency region
         const flows: Record<string, number> = {}; // interconnectionId -> MW flow
+
+        // Define all bidirectional potential paths
+        // "id" is the forward direction ID in the SVG/Data
         const interconnections = [
-            { id: 'kitahon', from: 'hokkaido', to: 'tohoku', cap: 900 },
-            { id: 'tohoku-tokyo', from: 'tohoku', to: 'tokyo', cap: 5000 },
-            { id: 'fc-tokyo-chubu', from: 'tokyo', to: 'chubu', cap: 2100 },
-            { id: 'fc-chubu-tokyo', from: 'chubu', to: 'tokyo', cap: 2100 },
-            { id: 'chubu-kansai', from: 'chubu', to: 'kansai', cap: 2000 },
-            { id: 'chubu-hokuriku', from: 'chubu', to: 'hokuriku', cap: 1000 },
-            { id: 'hokuriku-kansai', from: 'hokuriku', to: 'kansai', cap: 1500 },
-            { id: 'kansai-chugoku', from: 'kansai', to: 'chugoku', cap: 3000 },
-            { id: 'kansai-shikoku', from: 'kansai', to: 'shikoku', cap: 1400 },
-            { id: 'chugoku-kyushu', from: 'chugoku', to: 'kyushu', cap: 2500 }
+            { id: 'kitahon', A: 'hokkaido', B: 'tohoku', cap: 900 }, // Forward: Hokkaido -> Tohoku
+            { id: 'tohoku-tokyo', A: 'tohoku', B: 'tokyo', cap: 5000 },
+            { id: 'fc-tokyo-chubu', A: 'tokyo', B: 'chubu', cap: 2100 }, // FC is physically bidirectional
+            { id: 'chubu-kansai', A: 'chubu', B: 'kansai', cap: 2000 },
+            { id: 'chubu-hokuriku', A: 'chubu', B: 'hokuriku', cap: 1000 },
+            { id: 'hokuriku-kansai', A: 'hokuriku', B: 'kansai', cap: 1500 },
+            { id: 'kansai-chugoku', A: 'kansai', B: 'chugoku', cap: 3000 },
+            { id: 'kansai-shikoku', A: 'kansai', B: 'shikoku', cap: 1400 },
+            { id: 'chugoku-kyushu', A: 'chugoku', B: 'kyushu', cap: 2500 }
         ];
 
         // Create a map for capacity lookup
         const capacityMap: Record<string, number> = {};
         interconnections.forEach(c => { capacityMap[c.id] = c.cap; });
 
-        // Simple Heuristic: Sweep multiple times to allow multi-hop propagation (e.g. Hokkaido -> Tohoku -> Tokyo)
-        for (let i = 0; i < 4; i++) {
-            // Logic: If From has Surplus AND To has Deficit, move power.
+        // Iterative Solver for Grid Flow
+        for (let i = 0; i < 10; i++) {
             interconnections.forEach(conn => {
-                const fromBal = regionalBalance[conn.from].balance;
-                const toBal = regionalBalance[conn.to].balance;
+                const regionA = regionalBalance[conn.A];
+                const regionB = regionalBalance[conn.B];
 
-                if (fromBal > 0 && toBal < 0) {
-                    // Send power
-                    const amount = Math.min(fromBal, -toBal, conn.cap);
-                    flows[conn.id] = (flows[conn.id] || 0) + amount;
-                    regionalBalance[conn.from].balance -= amount;
-                    regionalBalance[conn.to].balance += amount;
-                }
-            });
+                // Calculate current sufficiency including current accumulated balance
+                // (Gen + Other + CurrentBalance) / Demand
+                // Note: regionalBalance.balance already tracks the net flow
+                const currentSufficiencyA = regionA.demand > 0 ? (regionA.gen + regionA.otherGen + regionA.balance) / regionA.demand : 1.0;
+                const currentSufficiencyB = regionB.demand > 0 ? (regionB.gen + regionB.otherGen + regionB.balance) / regionB.demand : 1.0;
 
-            // Reverse direction check
-            const reversePairs = [
-                { id: 'chugoku-kyushu', A: 'kyushu', B: 'chugoku', cap: 2500 },
-                { id: 'kansai-chugoku', A: 'chugoku', B: 'kansai', cap: 3000 },
-                { id: 'fc-tokyo-chubu', A: 'chubu', B: 'tokyo', cap: 2100 },
-            ];
+                // Threshold to trigger flow (hysteresis) to avoid osciallation
+                const threshold = 0.01; // 1% difference
 
-            reversePairs.forEach(pair => {
-                const fromBal = regionalBalance[pair.A].balance;
-                const toBal = regionalBalance[pair.B].balance;
+                if (Math.abs(currentSufficiencyA - currentSufficiencyB) > threshold) {
+                    // Determine direction: A->B or B->A
+                    // Flow attempts to equalize sufficiency
 
-                if (fromBal > 0 && toBal < 0) {
-                    const amount = Math.min(fromBal, -toBal, pair.cap);
-                    // Negative flow ID signifies reverse direction for visualization
-                    flows[pair.id] = (flows[pair.id] || 0) - amount;
-                    regionalBalance[pair.A].balance -= amount;
-                    regionalBalance[pair.B].balance += amount;
+                    // Simple P-controller logic: move a fraction of the difference
+                    // but clamped by capacity.
+
+                    // If A is richer than B
+                    if (currentSufficiencyA > currentSufficiencyB) {
+                        // Max possible flow to help B without hurting A too much?
+                        // Just simple logic: try to move enough power to equalize, but capped by line capacity
+
+                        // We need to calculate MW amount.
+                        // Delta Sufficiency * Average Demand?
+                        // Let's just move a fixed "flow impulse" proportional to the gap, 
+                        // iterating will smooth it out.
+
+                        // Heuristic transfer amount:
+                        // (Diff Sufficiency) * (Min Demand of A or B) * 0.5 (damping)
+                        let transfer = (currentSufficiencyA - currentSufficiencyB) * Math.min(regionA.demand, regionB.demand) * 0.2;
+
+                        // Clamp by capacity
+                        transfer = Math.min(transfer, conn.cap);
+
+                        // If flow already exists, check capacity left
+                        const currentFlow = flows[conn.id] || 0;
+                        // currentFlow > 0 means A->B. < 0 means B->A.
+
+                        // We want to ADD to current flow (or reduce reverse flow)
+                        // New Total Flow cannot exceed Cap
+                        let newFlow = currentFlow + transfer;
+                        if (newFlow > conn.cap) newFlow = conn.cap;
+
+                        const actualDelta = newFlow - currentFlow;
+
+                        // Apply
+                        flows[conn.id] = newFlow;
+                        regionA.balance -= actualDelta;
+                        regionB.balance += actualDelta;
+
+                    } else {
+                        // B is richer than A (Flow B -> A)
+                        let transfer = (currentSufficiencyB - currentSufficiencyA) * Math.min(regionA.demand, regionB.demand) * 0.2;
+                        transfer = Math.min(transfer, conn.cap);
+
+                        const currentFlow = flows[conn.id] || 0;
+                        // We want to subtract from currentFlow (making it more negative)
+                        let newFlow = currentFlow - transfer;
+                        if (newFlow < -conn.cap) newFlow = -conn.cap;
+
+                        const actualDelta = newFlow - currentFlow; // This will be negative
+
+                        flows[conn.id] = newFlow;
+                        regionA.balance -= actualDelta; // -(-delta) = +delta (A gains)
+                        regionB.balance += actualDelta; // +(-delta) = -delta (B loses)
+                    }
                 }
             });
         }
@@ -393,7 +440,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             {/* Info Overlay */}
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.6</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.7</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
