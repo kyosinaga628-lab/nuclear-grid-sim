@@ -30,6 +30,70 @@ const MapController = () => {
     return null;
 }
 
+// Custom component for JS-driven animation (More robust than CSS)
+const MovingPolyline: React.FC<{
+    positions: [number, number][];
+    isActive: boolean;
+    isReverse: boolean;
+    isHighLoad: boolean;
+    voltage: string;
+    flowSpeed: number;
+    baseColor: string;
+}> = ({ positions, isActive, isReverse, isHighLoad, voltage, flowSpeed, baseColor }) => {
+    const lineRef = React.useRef<any>(null);
+
+    React.useEffect(() => {
+        if (!isActive || !lineRef.current) return;
+
+        let animationFrameId: number;
+        let offset = 0;
+        const totalCycle = 30; // 10px dash + 20px gap
+
+        const animate = () => {
+            // Calculate speed px/frame. 60fps assumption.
+            // flowSpeed is in seconds per cycle? Previous CSS was duration based.
+            // If duration was 1.0s, then 30px per second.
+            // We want roughly that visual speed.
+            const speedPxPerFrame = (30 / (flowSpeed * 60)) * 1.5;
+
+            if (isReverse) {
+                offset += speedPxPerFrame;
+            } else {
+                offset -= speedPxPerFrame;
+            }
+
+            // Keep offset bounded to avoid huge numbers
+            if (Math.abs(offset) > totalCycle) offset = 0;
+
+            const el = lineRef.current.getElement();
+            if (el) {
+                el.style.strokeDashoffset = `${offset}`;
+                el.style.strokeDasharray = '10 20';
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [isActive, isReverse, flowSpeed]);
+
+    return (
+        <Polyline
+            ref={lineRef}
+            positions={positions}
+            pathOptions={{
+                color: baseColor,
+                weight: (voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0),
+                opacity: isActive ? 1.0 : 0.6,
+                dashArray: isActive ? '10 20' : undefined,
+                className: isHighLoad ? 'high-load-line' : ''
+            }}
+        />
+    );
+};
+
 const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant: (id: string) => void }> = ({ plants, gridLoad, onTogglePlant }) => {
     const [selectedPlant, setSelectedPlant] = useState<Plant | null>(null);
 
@@ -179,20 +243,16 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
                     const isActive = connectedActive || isInterconnectionActive;
 
-                    // Determine class: flow forward or reverse
-                    let animClass = 'line-flow';
-                    if (isInterconnectionActive && isReverse) animClass = 'line-flow-reverse';
-
                     return (
-                        <Polyline
+                        <MovingPolyline
                             key={line.id}
                             positions={line.path}
-                            pathOptions={{
-                                color: isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa')),
-                                weight: (line.voltage === '500kV' ? 4 : 2) * (isActive ? 1.5 : 1.0),
-                                opacity: isActive ? 1.0 : 0.6,
-                                className: `${animClass} ${isHighLoad || isInterconnectionActive ? 'high-load' : ''}`
-                            }}
+                            isActive={isActive}
+                            isReverse={isReverse}
+                            isHighLoad={isHighLoad || isInterconnectionActive}
+                            voltage={line.voltage}
+                            flowSpeed={flowSpeed}
+                            baseColor={isInterconnectionActive ? '#e879f9' : (isHighLoad ? '#fca5a5' : (line.voltage === 'HVDC' ? '#f472b6' : '#60a5fa'))}
                         />
                     );
                 })}
@@ -303,89 +363,90 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.3</span></h1>
-                <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
-                    Live visualization of nuclear power capacity and transmission topology.
-                </div>
+                <div className="overlay-ui">
+                    <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.4</span></h1>
+                    <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
+                        Live visualization of nuclear power capacity and transmission topology.
+                    </div>
 
-                {currentSelectedPlant ? (
-                    <div className="plant-card">
-                        <h2 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>{currentSelectedPlant.name}</h2>
+                    {currentSelectedPlant ? (
+                        <div className="plant-card">
+                            <h2 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>{currentSelectedPlant.name}</h2>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <div className={`status-badge ${getStatusClass(currentSelectedPlant.status)}`}>
-                                {currentSelectedPlant.status}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <div className={`status-badge ${getStatusClass(currentSelectedPlant.status)}`}>
+                                    {currentSelectedPlant.status}
+                                </div>
+                                <button
+                                    onClick={() => onTogglePlant(currentSelectedPlant.id)}
+                                    style={{
+                                        background: currentSelectedPlant.status === 'Active' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
+                                        color: currentSelectedPlant.status === 'Active' ? '#f87171' : '#4ade80',
+                                        border: currentSelectedPlant.status === 'Active' ? '1px solid #f87171' : '1px solid #4ade80',
+                                        padding: '4px 12px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '0.8rem'
+                                    }}
+                                >
+                                    {currentSelectedPlant.status === 'Active' ? 'STOP' : 'START'}
+                                </button>
                             </div>
-                            <button
-                                onClick={() => onTogglePlant(currentSelectedPlant.id)}
-                                style={{
-                                    background: currentSelectedPlant.status === 'Active' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-                                    color: currentSelectedPlant.status === 'Active' ? '#f87171' : '#4ade80',
-                                    border: currentSelectedPlant.status === 'Active' ? '1px solid #f87171' : '1px solid #4ade80',
-                                    padding: '4px 12px',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    fontSize: '0.8rem'
-                                }}
-                            >
-                                {currentSelectedPlant.status === 'Active' ? 'STOP' : 'START'}
-                            </button>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem' }}>
+                                <div>
+                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>Operator</div>
+                                    <div>{currentSelectedPlant.operator}</div>
+                                </div>
+                                <div>
+                                    <div style={{ color: '#888', fontSize: '0.8rem' }}>Capacity</div>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{currentSelectedPlant.capacity} MW</div>
+                                </div>
+                            </div>
                         </div>
+                    ) : (
+                        <div className="plant-card" style={{ opacity: 0.6, fontStyle: 'italic' }}>
+                            Click a power plant node to view details.
+                        </div>
+                    )}
+                </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.9rem' }}>
-                            <div>
-                                <div style={{ color: '#888', fontSize: '0.8rem' }}>Operator</div>
-                                <div>{currentSelectedPlant.operator}</div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#888', fontSize: '0.8rem' }}>Capacity</div>
-                                <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{currentSelectedPlant.capacity} MW</div>
-                            </div>
+                {/* Legend Overlay */}
+                <div className="legend-ui">
+                    <h3>Legend</h3>
+
+                    <div style={{ marginBottom: '10px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Grid Status</div>
+                        <div className="legend-item">
+                            <div className="legend-line" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
+                            <span>Normal Load</span>
+                        </div>
+                        <div className="legend-item">
+                            <div className="legend-line" style={{ background: '#f87171', boxShadow: '0 0 4px #f87171' }}></div>
+                            <span>High Stress (&gt;80%)</span>
                         </div>
                     </div>
-                ) : (
-                    <div className="plant-card" style={{ opacity: 0.6, fontStyle: 'italic' }}>
-                        Click a power plant node to view details.
-                    </div>
-                )}
-            </div>
 
-            {/* Legend Overlay */}
-            <div className="legend-ui">
-                <h3>Legend</h3>
-
-                <div style={{ marginBottom: '10px' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Grid Status</div>
-                    <div className="legend-item">
-                        <div className="legend-line" style={{ background: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }}></div>
-                        <span>Normal Load</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-line" style={{ background: '#f87171', boxShadow: '0 0 4px #f87171' }}></div>
-                        <span>High Stress (&gt;80%)</span>
+                    <div style={{ marginBottom: '10px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>City Power</div>
+                        <div className="legend-item">
+                            <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
+                            <span>Sufficient</span>
+                        </div>
+                        <div className="legend-item">
+                            <div className="legend-color-box" style={{ background: '#f87171' }}></div>
+                            <span>Insufficient</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
+                            S: Supply (Received)<br />
+                            D: Demand (Base Load)
+                        </div>
                     </div>
                 </div>
 
-                <div style={{ marginBottom: '10px' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>City Power</div>
-                    <div className="legend-item">
-                        <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
-                        <span>Sufficient</span>
-                    </div>
-                    <div className="legend-item">
-                        <div className="legend-color-box" style={{ background: '#f87171' }}></div>
-                        <span>Insufficient</span>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
-                        S: Supply (Received)<br />
-                        D: Demand (Base Load)
-                    </div>
-                </div>
             </div>
-
-        </div>
-    );
+            );
 };
 
-export default MapVisualizer;
+            export default MapVisualizer;
