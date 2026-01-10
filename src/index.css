@@ -173,7 +173,7 @@ body {
 
 @keyframes flow {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 30;
   }
 
   to {
@@ -193,18 +193,17 @@ body {
 }
 
 .line-flow {
-  /* [Dash, Gap] - Asymmetric (8px dash, 16px gap) makes direction clearer */
-  /* Total cycle = 24px */
-  stroke-dasharray: 8 16;
-  animation: flow 1.0s linear infinite;
+  /* [Dash, Gap] - 10px dash, 20px gap = 30px cycle (Matched with MapVisualizer) */
+  stroke-dasharray: 10 20;
+  animation: flow 1s linear infinite;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.6));
 }
 
 .line-flow-reverse {
   /* Asymmetric dash for reverse flow */
-  stroke-dasharray: 8 16;
-  animation: flow-reverse 1.0s linear infinite;
+  stroke-dasharray: 10 20;
+  animation: flow-reverse 1s linear infinite;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px rgba(217, 70, 239, 0.6));
 }
@@ -215,7 +214,7 @@ body {
   }
 
   to {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 30;
   }
 }
 

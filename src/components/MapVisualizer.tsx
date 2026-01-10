@@ -203,17 +203,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     .line-flow {
                         animation-duration: ${flowSpeed}s !important;
                     }
-                    /* Ensure CSS knows the pattern length for smooth looping */
-                    .line-flow, .line-flow-reverse {
-                         stroke-dasharray: 10 20; 
-                    }
-                    @keyframes flow {
-                        from { stroke-dashoffset: 30; } /* 10+20=30px cycle */
-                        to { stroke-dashoffset: 0; }
-                    }
-                    @keyframes flow-reverse {
-                        from { stroke-dashoffset: 0; }
-                        to { stroke-dashoffset: 30; }
+                    .line-flow-reverse {
+                        animation-duration: ${flowSpeed}s !important;
                     }
                     
                     .line-flow.high-load, .line-flow-reverse.high-load {
