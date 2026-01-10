@@ -53,12 +53,14 @@ const SENDAI_PLANT = [31.8385, 130.1802] as [number, number];
 export const gridLines: GridLine[] = [
     // Hokkaido
     { id: 'hokkaido-1', voltage: '275kV', path: [TOMARI, SAPPORO] },
-    // Seikan Tunnel (DC Interconnection)
-    { id: 'inter-hokkaido-tohoku', voltage: 'HVDC', path: [SAPPORO, [41.5, 140.5], [40.8, 140.7], HIGASHIDORI], interconnectionId: 'kitahon' },
+    // Seikan Tunnel (DC Interconnection) - Ends near Aomori, not at plant directly
+    { id: 'inter-hokkaido-tohoku', voltage: 'HVDC', path: [SAPPORO, [41.5, 140.5], [40.8, 140.5], SENDAI_CITY], interconnectionId: 'kitahon' },
 
     // Tohoku to Tokyo
-    { id: 'inter-tohoku-tokyo', voltage: '500kV', path: [HIGASHIDORI, SENDAI_CITY, TOKYO], interconnectionId: 'tohoku-tokyo' },
+    { id: 'inter-tohoku-tokyo', voltage: '500kV', path: [SENDAI_CITY, TOKYO], interconnectionId: 'tohoku-tokyo' },
     { id: 'onagawa-feeder', voltage: '500kV', path: [ONAGAWA, SENDAI_CITY] },
+    // Higashidori / Ohma feeder to Sendai (separate from interconnection)
+    { id: 'higashidori-feeder', voltage: '275kV', path: [HIGASHIDORI, [40.5, 141.0], SENDAI_CITY] },
 
     // TEPCO Region
     { id: 'tokai-feeder', voltage: '500kV', path: [TOKAI, TOKYO] },
