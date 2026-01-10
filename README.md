@@ -1,73 +1,68 @@
-# React + TypeScript + Vite
+# 🇯🇵 Japan Nuclear Grid Simulator (V2.8)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+日本の原子力発電所と電力グリッドの運用を模したインタラクティブなシミュレーターです。
+原発の稼働状況や電力需要を操作し、電力潮流や地域間の電力融通がどのように変化するかをリアルタイムで観察できます。
 
-Currently, two official plugins are available:
+## 🎯 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1.  **原発コントロール**: 全国17箇所の原子力発電所を個別に稼働(START)/停止(STOP)できます。
+2.  **電力需要シミュレーション**: 「Grid Load」スライダーで、日本全体の電力需要を調整できます（平時〜猛暑日の逼迫状況まで）。
+3.  **リアルタイム潮流**: 電力が余っている地域から不足している地域へ、連系線を通じて電力が流れる様子をアニメーションで可視化します。
+4.  **原子力貢献度の可視化**: 各地域の電力需要のうち、どれくらいが原子力でまかなわれているか（％）を表示します。
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📖 使い方ガイド
 
-## Expanding the ESLint configuration
+### 1. 基本操作
+- **マップ上の原発（⚡️アイコン）をクリック**: その原発の情報を表示し、「START/STOP」ボタンで稼働状態を切り替えます。
+- **右上の「Grid Load」スライダー**: 右に動かすと需要が増加（夏場のピーク時など）、左に動かすと減少（深夜など）します。
+- **「Reset All」ボタン**: すべての原発を初期状態（停止中など）に戻します。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 2. 凡例の見方（Legend）
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**地域の電力状況（丸いマーカー）**
+- 「⚛️ XX%」はその地域の需要に対する原子力のカバー率を示します。
+- 🟢 **緑 (≥30%)**: 原子力による供給が潤沢
+- 🟡 **黄 (10-30%)**: 中程度の依存度
+- 🔴 **赤 (<10%)**: 原子力供給が少ない（またはゼロ）
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+**送電線・連系線**
+- **青い流れる線**: 通常の電力潮流（方向を示しています）
+- **紫の線**: 地域間連系線（電力融通が行われている状態）
+- **赤い線**: 送電容量が逼迫している（過負荷）状態
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧪 試してほしいシナリオ（デモ用）
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+同僚の方へのデモとして、以下のシナリオが効果的です。
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### シナリオA: 全停止からの復旧
+1.  **Grid Load** を `100%`（標準）にします。
+2.  すべての原発を **STOP** にします。
+    - 結果: 全国の需要地が真っ赤（0%）になり、火力・再エネだけでギリギリの状態になります。
+3.  **関西エリア**の原発（大飯、高浜、美浜）を次々と **START** します。
+    - 結果: 大阪のカバー率が急上昇し、余った電力が**中国・四国・中部**へ流れ出す（紫の線がアニメーションする）様子が見られます。
+
+### シナリオB: 東西の電力融通（周波数変換）
+1.  **東京**の柏崎刈羽を **STOP**、**中部**の浜岡を **START** にします。
+    - 結果: 中部から東京へ電力が流れます（FC：周波数変換所を経由）。
+2.  逆に、**東京**の柏崎刈羽を **START**（全基稼働）、**中部**の浜岡を **STOP** にします。
+    - 結果: 今度は東京から中部へ電力が逆流する様子が観察できます。
+    - **ポイント**: 電力は「余裕のある方」から「余裕のない方」へ自動的に流れるロジックになっています。
+
+### シナリオC: 全面逼迫（パワー・クランチ）
+1.  原発をいくつか稼働させた状態で、**Grid Load** を `130%` 以上に上げます。
+2.  結果:
+    - 需要が激増し、原子力のカバー率（％）が低下します。
+    - 送電線が赤く光り始め、グリッド全体が過負荷になる様子が再現されます。
+
+---
+
+## 🛠 データ出典
+- **電力需要**: 各電力会社の2023年度最大電力需要実績を使用。
+- **原発データ**: 国内の主要な原子力発電所の定格出力を使用。
+
+---
+Created by Antigravity

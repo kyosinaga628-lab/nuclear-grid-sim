@@ -2,20 +2,20 @@ import { useState } from 'react';
 import MapVisualizer from './components/MapVisualizer';
 import ControlPanel from './components/ControlPanel';
 import StatisticsBoard from './components/StatisticsBoard';
+import HelpModal from './components/HelpModal';
 import { plants as initialPlants, type Plant } from './data/plants';
 import './dashboard.css';
 
 function App() {
   const [plants, setPlants] = useState<Plant[]>(initialPlants);
   const [gridLoad, setGridLoad] = useState<number>(50); // %
+  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
 
   const handleTogglePlant = (id: string) => {
     setPlants(currentPlants =>
       currentPlants.map(p => {
         if (p.id === id) {
           // Toggle logic: If Active -> Suspended, If Suspended -> Active
-          // For other statuses (Construction/Review), allow forcing to Active for simulation fun?
-          // Let's stick to simple Active <-> Suspended for simulation.
           const newStatus = p.status === 'Active' ? 'Suspended' : 'Active';
           return { ...p, status: newStatus };
         }
@@ -37,6 +37,16 @@ function App() {
 
   return (
     <div className="dashboard-layout">
+      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+
+      <button
+        className="help-button"
+        onClick={() => setIsHelpOpen(true)}
+        title="使い方ガイド"
+      >
+        ?
+      </button>
+
       <div className="sidebar">
         <StatisticsBoard plants={plants} gridLoad={gridLoad} />
         <ControlPanel

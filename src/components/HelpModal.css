@@ -1,0 +1,117 @@
+/* Help Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #222;
+    color: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    border: 1px solid #444;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #fff;
+}
+
+.modal-section {
+    margin-bottom: 24px;
+}
+
+.modal-section h3 {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 4px;
+    color: #60a5fa;
+    font-size: 1.1rem;
+}
+
+.modal-section ul {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.modal-section li {
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.dot {
+    font-size: 1.5rem;
+    line-height: 0.5;
+    margin-right: 8px;
+}
+
+.dot.green {
+    color: #4ade80;
+}
+
+.dot.yellow {
+    color: #facc15;
+}
+
+.dot.red {
+    color: #f87171;
+}
+
+.help-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    /* Higher than Map controls */
+    background: rgba(30, 30, 30, 0.8);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.help-button:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
