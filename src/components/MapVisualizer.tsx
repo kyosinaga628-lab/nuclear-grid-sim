@@ -241,19 +241,20 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
         // 3. Final Sufficiency Calculation for Hubs
         const hubStatus = consumptionHubs.map(hub => {
             const rb = regionalBalance[hub.regionId];
-            // Sufficiency = (Gen + Imports - Exports) / Demand
-            // Which is essentially (Demand + FinalBalance) / Demand
-            // = 1 + (FinalBalance / Demand) ??
-            // If Balance is negative (Deficit), Sufficiency < 100%. If Positive, > 100%.
 
-            // Base demand used for denom
+            // Current Demand for this hub
             const currentDemand = hub.baseDemand * (0.5 + (gridLoad / 100));
 
-            // Prevent division by zero
-            let sufficiency = currentDemand > 0 ? (currentDemand + rb.balance) / currentDemand : 1.0;
-            if (sufficiency < 0) sufficiency = 0; // Should not happen unless totally broken
+            // Nuclear Coverage = Nuclear Generation / Demand
+            // This shows what percentage of demand is covered by nuclear power specifically
+            const nuclearCoverage = currentDemand > 0 ? rb.gen / currentDemand : 0;
 
-            return { ...hub, sufficiency };
+            // Total Sufficiency = (All Generation + Balance) / Demand
+            // This is used for grid stress calculations
+            let sufficiency = currentDemand > 0 ? (currentDemand + rb.balance) / currentDemand : 1.0;
+            if (sufficiency < 0) sufficiency = 0;
+
+            return { ...hub, sufficiency, nuclearCoverage, currentDemand };
         });
 
         return { hubStatus, flows, capacityMap };
@@ -403,9 +404,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
                 {/* Consumption Hubs */}
                 {gridState.hubStatus.map((hub) => {
-                    // Nuclear coverage percentage (capped at 100% for display)
-                    const nuclearCoverage = Math.min(hub.sufficiency * 100, 100);
-                    const coverageColor = nuclearCoverage >= 100 ? '#4ade80' : nuclearCoverage >= 50 ? '#facc15' : '#f87171';
+                    // Nuclear coverage percentage (from calculated value, capped at 100% for display)
+                    const nuclearPct = Math.min(hub.nuclearCoverage * 100, 100);
+                    const coverageColor = nuclearPct >= 30 ? '#4ade80' : nuclearPct >= 10 ? '#facc15' : '#f87171';
 
                     return (
                         <CircleMarker
@@ -415,7 +416,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                 color: coverageColor,
                                 fillColor: 'transparent',
                                 weight: 3,
-                                className: nuclearCoverage < 50 ? 'hub-marker insufficient' : 'hub-marker sufficient'
+                                className: nuclearPct < 10 ? 'hub-marker insufficient' : 'hub-marker sufficient'
                             }}
                             radius={10 + (hub.baseDemand / 5000)}
                         >
@@ -427,7 +428,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                         fontWeight: 'bold',
                                         color: coverageColor
                                     }}>
-                                        ⚛️ {nuclearCoverage.toFixed(0)}%
+                                        ⚛️ {nuclearPct.toFixed(0)}%
                                     </div>
                                 </div>
                             </Tooltip>
@@ -440,7 +441,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             {/* Info Overlay */}
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.7</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.8</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
@@ -508,15 +509,15 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Nuclear Coverage</div>
                     <div className="legend-item">
                         <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
-                        <span>100% (Sufficient)</span>
+                        <span>≥30% (High)</span>
                     </div>
                     <div className="legend-item">
                         <div className="legend-color-box" style={{ background: '#facc15' }}></div>
-                        <span>50-99%</span>
+                        <span>10-30% (Medium)</span>
                     </div>
                     <div className="legend-item">
                         <div className="legend-color-box" style={{ background: '#f87171' }}></div>
-                        <span>&lt;50% (Insufficient)</span>
+                        <span>&lt;10% (Low)</span>
                     </div>
                     <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
                         ⚛️ = % of demand covered by nuclear
