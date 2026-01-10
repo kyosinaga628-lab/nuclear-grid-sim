@@ -230,7 +230,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 {gridLines.map((line) => {
                     // Determine if this line connects to an active plant
                     const connectedActive = plants.some(p =>
-                        p.status === 'Active' && line.path.some(pt => Math.abs(pt[0] - p.lat) < 0.1 && Math.abs(pt[1] - p.lng) < 0.1)
+                        p.status === 'Active' && line.path.some(pt => Math.abs(pt[0] - p.lat) < 0.5 && Math.abs(pt[1] - p.lng) < 0.5)
                     );
 
                     // Check if it's an active interconnection
@@ -257,31 +257,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     );
                 })}
 
-                {/* Inject dynamic style for animation speed */}
+                {/* Inject dynamic style for hub animations */}
                 <style>{`
-                    .line-flow {
-                        animation-duration: ${flowSpeed}s !important;
-                    }
-                        stroke-dasharray: 10 20 !important;
-                        animation: flow ${flowSpeed}s linear infinite !important;
-                        stroke-linecap: round;
-                        filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.6));
-                        will-change: stroke-dashoffset;
-                    }
-                    .line-flow-reverse {
-                        stroke-dasharray: 10 20 !important;
-                        animation: flow-reverse ${flowSpeed}s linear infinite !important;
-                        stroke-linecap: round;
-                        filter: drop-shadow(0 0 3px rgba(217, 70, 239, 0.6));
-                        will-change: stroke-dashoffset;
-                    }
-                    
-                    .line-flow.high-load, .line-flow-reverse.high-load {
-                        animation-duration: ${flowSpeed / 2}s !important;
-                        stroke: #f87171 !important;
-                        filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
-                    }
-
                     .hub-marker.insufficient {
                         animation: pulse-red 1.5s infinite alternate;
                     }
@@ -301,6 +278,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                     }
                     .hub-label-tooltip .leaflet-tooltip-tip {
                         border-top-color: rgba(0,0,0,0.7) !important;
+                    }
+                    .high-load-line {
+                        filter: drop-shadow(0 0 4px rgba(248, 113, 113, 0.8));
                     }
                 `}</style>
 
