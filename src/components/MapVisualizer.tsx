@@ -140,15 +140,19 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
         const interconnections = [
             { id: 'kitahon', from: 'hokkaido', to: 'tohoku', cap: 900 },
             { id: 'tohoku-tokyo', from: 'tohoku', to: 'tokyo', cap: 5000 },
-            { id: 'fc-tokyo-chubu', from: 'tokyo', to: 'chubu', cap: 2100 }, // Bi-directional handling
+            { id: 'fc-tokyo-chubu', from: 'tokyo', to: 'chubu', cap: 2100 },
             { id: 'fc-chubu-tokyo', from: 'chubu', to: 'tokyo', cap: 2100 },
             { id: 'chubu-kansai', from: 'chubu', to: 'kansai', cap: 2000 },
             { id: 'chubu-hokuriku', from: 'chubu', to: 'hokuriku', cap: 1000 },
             { id: 'hokuriku-kansai', from: 'hokuriku', to: 'kansai', cap: 1500 },
             { id: 'kansai-chugoku', from: 'kansai', to: 'chugoku', cap: 3000 },
             { id: 'kansai-shikoku', from: 'kansai', to: 'shikoku', cap: 1400 },
-            { id: 'chugoku-kyushu', from: 'chugoku', to: 'kyushu', cap: 2500 } // And reverse
+            { id: 'chugoku-kyushu', from: 'chugoku', to: 'kyushu', cap: 2500 }
         ];
+
+        // Create a map for capacity lookup
+        const capacityMap: Record<string, number> = {};
+        interconnections.forEach(c => { capacityMap[c.id] = c.cap; });
 
         // Simple Heuristic: Sweep multiple times to allow multi-hop propagation (e.g. Hokkaido -> Tohoku -> Tokyo)
         for (let i = 0; i < 4; i++) {
@@ -171,7 +175,6 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 { id: 'chugoku-kyushu', A: 'kyushu', B: 'chugoku', cap: 2500 },
                 { id: 'kansai-chugoku', A: 'chugoku', B: 'kansai', cap: 3000 },
                 { id: 'fc-tokyo-chubu', A: 'chubu', B: 'tokyo', cap: 2100 },
-                // Add potential reverse flows for North-South as well if needed (e.g. Tohoku -> Hokkaido unlikely but possible)
             ];
 
             reversePairs.forEach(pair => {
@@ -206,7 +209,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             return { ...hub, sufficiency };
         });
 
-        return { hubStatus, flows };
+        return { hubStatus, flows, capacityMap };
 
     }, [plants, gridLoad]);
 
@@ -265,8 +268,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                 flowSpeed={flowSpeed}
                                 baseColor={lineColor}
                             />
-                            {/* Show flow amount tooltip for interconnection lines */}
-                            {isInterconnectionActive && (
+                            {/* Show flow percentage for interconnection lines */}
+                            {isInterconnectionActive && line.interconnectionId && (
                                 <CircleMarker
                                     center={line.path[Math.floor(line.path.length / 2)]}
                                     radius={0}
@@ -274,7 +277,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                 >
                                     <Tooltip permanent direction="center" className="flow-tooltip" opacity={0.9}>
                                         <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#e879f9', textAlign: 'center' }}>
-                                            {isReverse ? '◀' : '▶'} {Math.round(flowAmount).toLocaleString()} MW
+                                            {isReverse ? '◀' : '▶'} {Math.round((flowAmount / (gridState.capacityMap[line.interconnectionId] || 1)) * 100)}%
                                         </div>
                                     </Tooltip>
                                 </CircleMarker>
@@ -352,38 +355,45 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 ))}
 
                 {/* Consumption Hubs */}
-                {gridState.hubStatus.map((hub) => (
-                    <CircleMarker
-                        key={hub.id}
-                        center={[hub.lat, hub.lng]}
-                        pathOptions={{
-                            color: hub.sufficiency >= 1.0 ? '#4ade80' : hub.sufficiency > 0.6 ? '#facc15' : '#f87171',
-                            fillColor: 'transparent',
-                            weight: 3,
-                            className: hub.sufficiency < 0.6 ? 'hub-marker insufficient' : 'hub-marker sufficient'
-                        }}
-                        radius={10 + (hub.baseDemand / 2000)}
-                    >
-                        <Tooltip direction="center" permanent className="hub-label-tooltip" opacity={0.8}>
-                            <div style={{ textAlign: 'center', fontSize: '10px' }}>
-                                <div style={{ marginBottom: '2px' }}>{hub.name}</div>
-                                <div style={{ fontSize: '0.9em', color: '#ccc' }}>
-                                    S: {Math.round(hub.baseDemand * hub.sufficiency).toLocaleString()} MW
+                {gridState.hubStatus.map((hub) => {
+                    // Nuclear coverage percentage (capped at 100% for display)
+                    const nuclearCoverage = Math.min(hub.sufficiency * 100, 100);
+                    const coverageColor = nuclearCoverage >= 100 ? '#4ade80' : nuclearCoverage >= 50 ? '#facc15' : '#f87171';
+
+                    return (
+                        <CircleMarker
+                            key={hub.id}
+                            center={[hub.lat, hub.lng]}
+                            pathOptions={{
+                                color: coverageColor,
+                                fillColor: 'transparent',
+                                weight: 3,
+                                className: nuclearCoverage < 50 ? 'hub-marker insufficient' : 'hub-marker sufficient'
+                            }}
+                            radius={10 + (hub.baseDemand / 5000)}
+                        >
+                            <Tooltip direction="center" permanent className="hub-label-tooltip" opacity={0.8}>
+                                <div style={{ textAlign: 'center', fontSize: '10px' }}>
+                                    <div style={{ marginBottom: '2px' }}>{hub.name}</div>
+                                    <div style={{
+                                        fontSize: '1.1em',
+                                        fontWeight: 'bold',
+                                        color: coverageColor
+                                    }}>
+                                        ⚛️ {nuclearCoverage.toFixed(0)}%
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '0.9em', color: '#888' }}>
-                                    D: {hub.baseDemand.toLocaleString()} MW
-                                </div>
-                            </div>
-                        </Tooltip>
-                    </CircleMarker>
-                ))}
+                            </Tooltip>
+                        </CircleMarker>
+                    );
+                })}
 
             </MapContainer>
 
             {/* Info Overlay */}
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.5</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.6</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
@@ -448,18 +458,21 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 </div>
 
                 <div style={{ marginBottom: '10px' }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>City Power</div>
+                    <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>Nuclear Coverage</div>
                     <div className="legend-item">
                         <div className="legend-color-box" style={{ background: '#4ade80' }}></div>
-                        <span>Sufficient</span>
+                        <span>100% (Sufficient)</span>
+                    </div>
+                    <div className="legend-item">
+                        <div className="legend-color-box" style={{ background: '#facc15' }}></div>
+                        <span>50-99%</span>
                     </div>
                     <div className="legend-item">
                         <div className="legend-color-box" style={{ background: '#f87171' }}></div>
-                        <span>Insufficient</span>
+                        <span>&lt;50% (Insufficient)</span>
                     </div>
                     <div style={{ fontSize: '0.75rem', marginTop: '4px', fontStyle: 'italic', color: '#888' }}>
-                        S: Supply (Received)<br />
-                        D: Demand (Base Load)
+                        ⚛️ = % of demand covered by nuclear
                     </div>
                 </div>
             </div>

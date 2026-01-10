@@ -101,13 +101,14 @@ export interface ConsumptionHub {
 }
 
 export const consumptionHubs: ConsumptionHub[] = [
-    { id: 'tokyo', name: 'Tokyo', lat: 35.6895, lng: 139.6917, baseDemand: 16000, regionId: 'tokyo' },
-    { id: 'osaka', name: 'Osaka', lat: 34.6937, lng: 135.5023, baseDemand: 10000, regionId: 'kansai' },
-    { id: 'nagoya', name: 'Nagoya', lat: 35.1815, lng: 136.9066, baseDemand: 7000, regionId: 'chubu' },
-    { id: 'fukuoka', name: 'Fukuoka', lat: 33.5902, lng: 130.4017, baseDemand: 4000, regionId: 'kyushu' },
-    { id: 'sapporo', name: 'Sapporo', lat: 43.0618, lng: 141.3545, baseDemand: 2500, regionId: 'hokkaido' },
-    { id: 'sendai', name: 'Sendai', lat: 38.2682, lng: 140.8694, baseDemand: 3000, regionId: 'tohoku' },
-    { id: 'hiroshima', name: 'Hiroshima', lat: 34.3853, lng: 132.4553, baseDemand: 2500, regionId: 'chugoku' },
-    { id: 'kanazawa', name: 'Kanazawa', lat: 36.5613, lng: 136.6562, baseDemand: 1500, regionId: 'hokuriku' },
-    { id: 'takamatsu', name: 'Takamatsu', lat: 34.3428, lng: 134.0466, baseDemand: 1200, regionId: 'shikoku' },
+    // Based on 2023 actual peak demand data from each utility
+    { id: 'tokyo', name: 'Tokyo', lat: 35.6895, lng: 139.6917, baseDemand: 55250, regionId: 'tokyo' }, // TEPCO 2023/7/18
+    { id: 'osaka', name: 'Osaka', lat: 34.6937, lng: 135.5023, baseDemand: 29050, regionId: 'kansai' }, // KEPCO 2023 Summer
+    { id: 'nagoya', name: 'Nagoya', lat: 35.1815, lng: 136.9066, baseDemand: 24650, regionId: 'chubu' }, // Chubu 2023/7/18
+    { id: 'fukuoka', name: 'Fukuoka', lat: 33.5902, lng: 130.4017, baseDemand: 16460, regionId: 'kyushu' }, // Kyuden 2023 Summer
+    { id: 'sapporo', name: 'Sapporo', lat: 43.0618, lng: 141.3545, baseDemand: 5691, regionId: 'hokkaido' }, // HEPCO 2023/1/25
+    { id: 'sendai', name: 'Sendai', lat: 38.2682, lng: 140.8694, baseDemand: 14490, regionId: 'tohoku' }, // Tohoku 2023/8/23
+    { id: 'hiroshima', name: 'Hiroshima', lat: 34.3853, lng: 132.4553, baseDemand: 10260, regionId: 'chugoku' }, // Chugoku 2023/7/27
+    { id: 'kanazawa', name: 'Kanazawa', lat: 36.5613, lng: 136.6562, baseDemand: 4910, regionId: 'hokuriku' }, // Hokuriku 2023/7/28
+    { id: 'takamatsu', name: 'Takamatsu', lat: 34.3428, lng: 134.0466, baseDemand: 4908, regionId: 'shikoku' }, // Yonden 2023/8/21
 ];
