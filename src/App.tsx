@@ -14,10 +14,12 @@ function App() {
 
   // Tutorial State
   const [tutorialStep, setTutorialStep] = useState<number>(0);
+  const [hasRunTutorial, setHasRunTutorial] = useState<boolean>(false);
 
   const startTutorial = () => {
     setTutorialStep(1);
     setIsHelpOpen(false);
+    setHasRunTutorial(true);
     setPlants(initialPlants);
     setGridLoad(50);
   };
@@ -128,11 +130,11 @@ function App() {
 
       <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '8px', zIndex: 2000 }}>
         <div style={{ position: 'relative' }}>
-          {tutorialStep === 0 && !isHelpOpen && (
+          {tutorialStep === 0 && !isHelpOpen && !hasRunTutorial && (
             <div className="tutorial-bubble">チュートリアル</div>
           )}
           <button
-            className={`help-button ${tutorialStep === 0 && !isHelpOpen ? 'help-button-attention' : ''}`}
+            className={`help-button ${tutorialStep === 0 && !isHelpOpen && !hasRunTutorial ? 'help-button-attention' : ''}`}
             style={{ position: 'static' }}
             onClick={startTutorial}
             title="チュートリアルを開始"
