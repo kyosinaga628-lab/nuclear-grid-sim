@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { type Plant } from '../data/plants';
+import { type Plant, getPlantActiveCapacity, getPlantCapacity, getPlantActiveCount } from '../data/plants';
 import { gridLines, consumptionHubs } from '../data/grid';
 
 // Helper to set color based on status
@@ -24,6 +24,17 @@ const getStatusClass = (status: string) => {
         case 'Suspended': return 'status-danger';
         default: return 'status-neutral';
     }
+};
+
+// Derive a plant's overall status from its reactors
+const getPlantStatus = (plant: Plant): string => {
+    const activeCount = getPlantActiveCount(plant);
+    if (activeCount > 0) return 'Active';
+    const underReview = plant.reactors.some(r => r.status === 'Under Review');
+    if (underReview) return 'Under Review';
+    const construction = plant.reactors.every(r => r.status === 'Construction');
+    if (construction) return 'Construction';
+    return 'Suspended';
 };
 
 const MapController = () => {
@@ -114,10 +125,11 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             regionalBalance[r] = { gen: 0, otherGen: 0, demand: 0, balance: 0, sufficiency: 0 };
         });
 
-        // Sum Nuclear Generation per Region
+        // Sum Nuclear Generation per Region (using reactor data)
         plants.forEach(p => {
-            if (p.status === 'Active' && regionalBalance[p.regionId]) {
-                regionalBalance[p.regionId].gen += p.capacity;
+            const activeCapacity = getPlantActiveCapacity(p);
+            if (activeCapacity > 0 && regionalBalance[p.regionId]) {
+                regionalBalance[p.regionId].gen += activeCapacity;
             }
         });
 
@@ -282,9 +294,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
                 {/* Grid Lines */}
                 {gridLines.map((line) => {
-                    // Determine if this line connects to an active plant
+                    // Determine if this line connects to a plant with active reactors
                     const connectedActive = plants.some(p =>
-                        p.status === 'Active' && line.path.some(pt => Math.abs(pt[0] - p.lat) < 0.5 && Math.abs(pt[1] - p.lng) < 0.5)
+                        getPlantActiveCount(p) > 0 && line.path.some(pt => Math.abs(pt[0] - p.lat) < 0.5 && Math.abs(pt[1] - p.lng) < 0.5)
                     );
 
                     // Check if it's an active interconnection
@@ -380,13 +392,13 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         key={plant.id}
                         center={[plant.lat, plant.lng]}
                         pathOptions={{
-                            color: getStatusColor(plant.status),
-                            fillColor: getStatusColor(plant.status),
+                            color: getStatusColor(getPlantStatus(plant)),
+                            fillColor: getStatusColor(getPlantStatus(plant)),
                             fillOpacity: 0.8,
                             weight: 2,
-                            className: `station-marker ${plant.status === 'Active' ? 'marker-active' : ''} ${highlightPlants && (!selectedPlant || plant.id !== selectedPlant.id) ? 'tutorial-highlight' : ''}`
+                            className: `station-marker ${getPlantActiveCount(plant) > 0 ? 'marker-active' : ''} ${highlightPlants && (!selectedPlant || plant.id !== selectedPlant.id) ? 'tutorial-highlight' : ''}`
                         }}
-                        radius={Math.sqrt(plant.capacity) / 2}
+                        radius={Math.sqrt(getPlantCapacity(plant)) / 2}
                         eventHandlers={{
                             click: () => {
                                 setSelectedPlant(plant);
@@ -441,7 +453,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             {/* Info Overlay */}
             {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V2.8</span></h1>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V3.0</span></h1>
                 <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
@@ -451,15 +463,15 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         <h2 style={{ margin: '0 0 8px 0', fontSize: '1.2rem' }}>{currentSelectedPlant.name}</h2>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <div className={`status-badge ${getStatusClass(currentSelectedPlant.status)}`}>
-                                {currentSelectedPlant.status}
+                            <div className={`status-badge ${getStatusClass(getPlantStatus(currentSelectedPlant))}`}>
+                                {getPlantActiveCount(currentSelectedPlant)}/{currentSelectedPlant.reactors.length}基 稼働中
                             </div>
                             <button
                                 onClick={() => onTogglePlant(currentSelectedPlant.id)}
                                 style={{
-                                    background: currentSelectedPlant.status === 'Active' ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
-                                    color: currentSelectedPlant.status === 'Active' ? '#f87171' : '#4ade80',
-                                    border: currentSelectedPlant.status === 'Active' ? '1px solid #f87171' : '1px solid #4ade80',
+                                    background: getPlantActiveCount(currentSelectedPlant) > 0 ? 'rgba(248, 113, 113, 0.2)' : 'rgba(74, 222, 128, 0.2)',
+                                    color: getPlantActiveCount(currentSelectedPlant) > 0 ? '#f87171' : '#4ade80',
+                                    border: getPlantActiveCount(currentSelectedPlant) > 0 ? '1px solid #f87171' : '1px solid #4ade80',
                                     padding: '4px 12px',
                                     borderRadius: '4px',
                                     cursor: 'pointer',
@@ -467,7 +479,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                                     fontSize: '0.8rem'
                                 }}
                             >
-                                {currentSelectedPlant.status === 'Active' ? 'STOP' : 'START'}
+                                {getPlantActiveCount(currentSelectedPlant) > 0 ? '全停止' : '全起動'}
                             </button>
                         </div>
 
@@ -478,7 +490,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                             </div>
                             <div>
                                 <div style={{ color: '#888', fontSize: '0.8rem' }}>Capacity</div>
-                                <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{currentSelectedPlant.capacity} MW</div>
+                                <div style={{ fontFamily: 'monospace', fontSize: '1rem' }}>{getPlantActiveCapacity(currentSelectedPlant).toLocaleString()} / {getPlantCapacity(currentSelectedPlant).toLocaleString()} MW</div>
                             </div>
                         </div>
                     </div>

@@ -4,7 +4,7 @@ import ControlPanel from './components/ControlPanel';
 import StatisticsBoard from './components/StatisticsBoard';
 import HelpModal from './components/HelpModal';
 import TutorialGuide from './components/TutorialGuide';
-import { plants as initialPlants, type Plant } from './data/plants';
+import { plants as initialPlants, type Plant, type ReactorStatus } from './data/plants';
 import './dashboard.css';
 
 function App() {
@@ -24,12 +24,49 @@ function App() {
     setGridLoad(50);
   };
 
-  const handleTogglePlant = (id: string) => {
+  // Toggle individual reactor
+  const handleToggleReactor = (plantId: string, reactorId: string) => {
     setPlants(currentPlants =>
       currentPlants.map(p => {
-        if (p.id === id) {
-          const newStatus = p.status === 'Active' ? 'Suspended' : 'Active';
-          return { ...p, status: newStatus };
+        if (p.id === plantId) {
+          return {
+            ...p,
+            reactors: p.reactors.map(r => {
+              if (r.id === reactorId) {
+                const newStatus: ReactorStatus = r.status === 'Active' ? 'Suspended' : 'Active';
+                return { ...r, status: newStatus };
+              }
+              return r;
+            }),
+          };
+        }
+        return p;
+      })
+    );
+
+    if (tutorialStep === 1 || tutorialStep === 2) {
+      setTutorialStep(prev => prev + 1);
+    }
+  };
+
+  // Toggle all reactors in a plant
+  const handleTogglePlant = (plantId: string) => {
+    setPlants(currentPlants =>
+      currentPlants.map(p => {
+        if (p.id === plantId) {
+          // If any reactor is active, suspend all. Otherwise, activate all operable ones.
+          const hasActive = p.reactors.some(r => r.status === 'Active');
+          const newStatus: ReactorStatus = hasActive ? 'Suspended' : 'Active';
+          return {
+            ...p,
+            reactors: p.reactors.map(r => {
+              // Only toggle reactors that are not under construction
+              if (r.status !== 'Construction') {
+                return { ...r, status: newStatus };
+              }
+              return r;
+            }),
+          };
         }
         return p;
       })
@@ -47,7 +84,12 @@ function App() {
 
   const handleSetAllActive = () => {
     setPlants(currentPlants =>
-      currentPlants.map(p => ({ ...p, status: 'Active' }))
+      currentPlants.map(p => ({
+        ...p,
+        reactors: p.reactors.map(r =>
+          r.status !== 'Construction' ? { ...r, status: 'Active' as ReactorStatus } : r
+        ),
+      }))
     );
   };
 
@@ -157,6 +199,7 @@ function App() {
         <ControlPanel
           plants={plants}
           onTogglePlant={handleTogglePlant}
+          onToggleReactor={handleToggleReactor}
           gridLoad={gridLoad}
           onSetGridLoad={handleSetGridLoad}
           onSetAllActive={handleSetAllActive}

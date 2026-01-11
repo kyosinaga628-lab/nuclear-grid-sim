@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { type Plant } from '../data/plants';
+import { type Plant, getPlantActiveCapacity } from '../data/plants';
 
 interface StatisticsBoardProps {
     plants: Plant[];
@@ -8,6 +8,10 @@ interface StatisticsBoardProps {
 }
 
 const TOTAL_DEMAND_BASE = 40000; // MW base demand assumption
+
+// Helper to get total active capacity across all plants
+const getTotalActiveCapacity = (plants: Plant[]): number =>
+    plants.reduce((sum, p) => sum + getPlantActiveCapacity(p), 0);
 
 const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, highlight }) => {
 
@@ -18,9 +22,7 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
     React.useEffect(() => {
         const timer = setInterval(() => {
             // Calculate active capacity for this tick
-            const activeCapacity = plants
-                .filter(p => p.status === 'Active')
-                .reduce((sum, p) => sum + p.capacity, 0);
+            const activeCapacity = getTotalActiveCapacity(plants);
 
             // Assumptions:
             // CO2: 0.5 kg/kWh (Gas/Coal mix replacement)
@@ -40,9 +42,7 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
     }, [plants]);
 
     const stats = useMemo(() => {
-        const activeCapacity = plants
-            .filter(p => p.status === 'Active')
-            .reduce((sum, p) => sum + p.capacity, 0);
+        const activeCapacity = getTotalActiveCapacity(plants);
 
         const currentDemand = TOTAL_DEMAND_BASE * (0.5 + (gridLoad / 100)); // Demand varies 0.5x to 1.5x based on load
         const sufficiency = (activeCapacity / currentDemand) * 100;
