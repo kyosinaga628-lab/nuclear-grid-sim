@@ -104,6 +104,41 @@
     z-index: 5000;
 }
 
+.tutorial-bubble {
+    position: absolute;
+    right: 50px;
+    /* Position to the left of the button */
+    top: 50%;
+    margin-top: -16px;
+    /* Center alignment adjustment */
+    background: #3b82f6;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    pointer-events: none;
+    animation: bounce-attention 2s infinite;
+    /* Sync with button */
+    display: flex;
+    align-items: center;
+    height: 32px;
+    box-sizing: border-box;
+}
+
+.tutorial-bubble::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -6px;
+    transform: translateY(-50%);
+    border-width: 6px 0 6px 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent #3b82f6;
+}
+
 /* For Map markers (leaflet specific override if needed) */
 .leaflet-marker-icon.tutorial-highlight {
     box-shadow: 0 0 0 4px #e879f9 !important;

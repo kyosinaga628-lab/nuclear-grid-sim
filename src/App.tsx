@@ -127,16 +127,22 @@ function App() {
       {tutorialContent}
 
       <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', gap: '8px', zIndex: 2000 }}>
+        <div style={{ position: 'relative' }}>
+          {tutorialStep === 0 && !isHelpOpen && (
+            <div className="tutorial-bubble">チュートリアル</div>
+          )}
+          <button
+            className={`help-button ${tutorialStep === 0 && !isHelpOpen ? 'help-button-attention' : ''}`}
+            style={{ position: 'static' }}
+            onClick={startTutorial}
+            title="チュートリアルを開始"
+          >
+            🎓
+          </button>
+        </div>
         <button
-          className={`help-button ${tutorialStep === 0 && !isHelpOpen ? 'help-button-attention' : ''}`}
+          className="help-button"
           style={{ position: 'static' }}
-          onClick={startTutorial}
-          title="チュートリアルを開始"
-        >
-          🎓
-        </button>
-        <button
-          className="help-button" style={{ position: 'static' }}
           onClick={() => setIsHelpOpen(true)}
           title="使い方ガイド"
         >
