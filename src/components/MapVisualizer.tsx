@@ -118,11 +118,15 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
     // Simulation Logic: Solve Grid Flow
     const gridState = useMemo(() => {
         // 1. Calculate Regional Balance (Generation - Demand)
-        const regionalBalance: Record<string, { gen: number, otherGen: number, demand: number, balance: number, sufficiency: number }> = {};
+        const regionalBalance: Record<string, { gen: number, baseOtherGen: number, otherGen: number, demand: number, balance: number, sufficiency: number }> = {};
+
+        // Thermal Suppression Rate: When nuclear restarts, thermal is reduced by this ratio of nuclear output
+        // 0.8 = 80% of nuclear output displaces thermal (remaining 20% adds to reserves/exports)
+        const THERMAL_SUPPRESSION_RATE = 0.8;
 
         // Initialize regions
         ['hokkaido', 'tohoku', 'tokyo', 'chubu', 'hokuriku', 'kansai', 'chugoku', 'shikoku', 'kyushu'].forEach(r => {
-            regionalBalance[r] = { gen: 0, otherGen: 0, demand: 0, balance: 0, sufficiency: 0 };
+            regionalBalance[r] = { gen: 0, baseOtherGen: 0, otherGen: 0, demand: 0, balance: 0, sufficiency: 0 };
         });
 
         // Sum Nuclear Generation per Region (using reactor data)
@@ -133,14 +137,26 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             }
         });
 
-        // Sum Demand per Region & Estimate Non-Nuclear Supply
+        // Sum Demand per Region & Estimate Non-Nuclear Supply with Thermal Suppression
         consumptionHubs.forEach(h => {
             const currentDemand = h.baseDemand * (0.5 + (gridLoad / 100));
             if (regionalBalance[h.regionId]) {
                 regionalBalance[h.regionId].demand += currentDemand;
-                // Use region-specific non-nuclear ratio from 2024 actual data (Nikkei)
-                // This reflects how much of the demand is covered by thermal, hydro, renewables etc.
-                regionalBalance[h.regionId].otherGen += h.baseDemand * h.nonNuclearRatio;
+
+                // Base non-nuclear generation (2024 actual data - when nuclear operates as current)
+                const baseOtherGen = h.baseDemand * h.nonNuclearRatio;
+                regionalBalance[h.regionId].baseOtherGen += baseOtherGen;
+
+                // Apply thermal suppression: reduce thermal by THERMAL_SUPPRESSION_RATE * nuclear output
+                // This simulates thermal plants backing down when nuclear restarts
+                const nuclearGen = regionalBalance[h.regionId].gen;
+                const thermalSuppression = nuclearGen * THERMAL_SUPPRESSION_RATE;
+
+                // otherGen cannot go below a minimum (hydro + renewables, roughly 20% of base)
+                const minOtherGen = h.baseDemand * 0.2; // Hydro/renewables floor
+                const adjustedOtherGen = Math.max(baseOtherGen - thermalSuppression, minOtherGen);
+
+                regionalBalance[h.regionId].otherGen += adjustedOtherGen;
             }
         });
 
