@@ -138,11 +138,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             const currentDemand = h.baseDemand * (0.5 + (gridLoad / 100));
             if (regionalBalance[h.regionId]) {
                 regionalBalance[h.regionId].demand += currentDemand;
-                // SIMULATION ASSUMPTION:
-                // Non-nuclear sources (Thermal, Hydro, Solar) cover ~85% of base demand.
-                // Nuclear covers the rest + margin.
-                // This makes the nuclear availability critical for reaching 100%.
-                regionalBalance[h.regionId].otherGen += h.baseDemand * 0.85;
+                // Use region-specific non-nuclear ratio from 2024 actual data (Nikkei)
+                // This reflects how much of the demand is covered by thermal, hydro, renewables etc.
+                regionalBalance[h.regionId].otherGen += h.baseDemand * h.nonNuclearRatio;
             }
         });
 

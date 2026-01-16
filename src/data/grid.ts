@@ -100,17 +100,48 @@ export interface ConsumptionHub {
     lng: number;
     baseDemand: number; // MW
     regionId: string;
+    /**
+     * 原発以外の電源（火力・水力・再エネ等）が需要の何%を供給するか
+     * 2024年度日経新聞データより逆算:
+     * - 原発比率が高い地域 = 他電源率が低い（原発に依存）
+     * - 原発比率が低い地域 = 他電源率が高い（火力等に依存）
+     */
+    nonNuclearRatio: number;
 }
 
+// 2024年度 各電力会社公式開示データに基づく電源構成
+// 原発比率 = 1 - 他電源率 (全原発稼働時の期待値)
+// nonNuclearRatio: 原発以外の電源が需要の何%を供給するか
+// thermalRatio: 火力発電の比率（石炭+LNG+石油）
+// hydroRatio: 水力発電の比率
+// renewableRatio: 再エネ+FIT+取引所等の比率
 export const consumptionHubs: ConsumptionHub[] = [
-    // Based on 2023 actual peak demand data from each utility
-    { id: 'tokyo', name: 'Tokyo', lat: 35.6895, lng: 139.6917, baseDemand: 55250, regionId: 'tokyo' }, // TEPCO 2023/7/18
-    { id: 'osaka', name: 'Osaka', lat: 34.6937, lng: 135.5023, baseDemand: 29050, regionId: 'kansai' }, // KEPCO 2023 Summer
-    { id: 'nagoya', name: 'Nagoya', lat: 35.1815, lng: 136.9066, baseDemand: 24650, regionId: 'chubu' }, // Chubu 2023/7/18
-    { id: 'fukuoka', name: 'Fukuoka', lat: 33.5902, lng: 130.4017, baseDemand: 16460, regionId: 'kyushu' }, // Kyuden 2023 Summer
-    { id: 'sapporo', name: 'Sapporo', lat: 43.0618, lng: 141.3545, baseDemand: 5691, regionId: 'hokkaido' }, // HEPCO 2023/1/25
-    { id: 'sendai', name: 'Sendai', lat: 38.2682, lng: 140.8694, baseDemand: 14490, regionId: 'tohoku' }, // Tohoku 2023/8/23
-    { id: 'hiroshima', name: 'Hiroshima', lat: 34.3853, lng: 132.4553, baseDemand: 10260, regionId: 'chugoku' }, // Chugoku 2023/7/27
-    { id: 'kanazawa', name: 'Kanazawa', lat: 36.5613, lng: 136.6562, baseDemand: 4910, regionId: 'hokuriku' }, // Hokuriku 2023/7/28
-    { id: 'takamatsu', name: 'Takamatsu', lat: 34.3428, lng: 134.0466, baseDemand: 4908, regionId: 'shikoku' }, // Yonden 2023/8/21
+    // 北海道電力: 原発0%（泊停止中）、火力55%、水力+再エネ45%
+    { id: 'sapporo', name: 'Sapporo', lat: 43.0618, lng: 141.3545, baseDemand: 5691, regionId: 'hokkaido', nonNuclearRatio: 1.00 },
+
+    // 東北電力: 原発0%（女川2024年11月再稼働、年度実績では0%）、火力67%
+    { id: 'sendai', name: 'Sendai', lat: 38.2682, lng: 140.8694, baseDemand: 14490, regionId: 'tohoku', nonNuclearRatio: 1.00 },
+
+    // 東京電力EP: 原発0%（柏崎刈羽停止中）、火力73%、水力+再エネ27%
+    { id: 'tokyo', name: 'Tokyo', lat: 35.6895, lng: 139.6917, baseDemand: 55250, regionId: 'tokyo', nonNuclearRatio: 1.00 },
+
+    // 中部電力ミライズ: 原発0%（浜岡停止中）、火力83%、水力4%、FIT5%、取引所6%
+    { id: 'nagoya', name: 'Nagoya', lat: 35.1815, lng: 136.9066, baseDemand: 24650, regionId: 'chubu', nonNuclearRatio: 1.00 },
+
+    // 北陸電力: 原発0%（志賀停止中）、石炭39%、LNG7%、石油1%、水力25%
+    { id: 'kanazawa', name: 'Kanazawa', lat: 36.5613, lng: 136.6562, baseDemand: 4910, regionId: 'hokuriku', nonNuclearRatio: 1.00 },
+
+    // 関西電力: 原発26%、火力39%、水力8%、FIT4%、取引所17%
+    { id: 'osaka', name: 'Osaka', lat: 34.6937, lng: 135.5023, baseDemand: 29050, regionId: 'kansai', nonNuclearRatio: 0.74 },
+
+    // 中国電力: 原発18%（島根2号稼働）、火力57%、水力11%、取引所8%、FIT6%
+    { id: 'hiroshima', name: 'Hiroshima', lat: 34.3853, lng: 132.4553, baseDemand: 10260, regionId: 'chugoku', nonNuclearRatio: 0.82 },
+
+    // 四国電力: 原発22%（伊方稼働）、火力60%、水力10%、FIT4%、再エネ2%、取引所2%
+    { id: 'takamatsu', name: 'Takamatsu', lat: 34.3428, lng: 134.0466, baseDemand: 4908, regionId: 'shikoku', nonNuclearRatio: 0.78 },
+
+    // 九州電力: 原発37%（玄海・川内稼働）、火力37%、水力5%、FIT12%、再エネ2%、取引所4%
+    { id: 'fukuoka', name: 'Fukuoka', lat: 33.5902, lng: 130.4017, baseDemand: 16460, regionId: 'kyushu', nonNuclearRatio: 0.63 },
 ];
+
+
