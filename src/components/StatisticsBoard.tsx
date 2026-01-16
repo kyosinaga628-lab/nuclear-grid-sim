@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { type Plant, getPlantActiveCapacity } from '../data/plants';
+import { consumptionHubs } from '../data/grid';
 
 interface StatisticsBoardProps {
     plants: Plant[];
@@ -7,7 +8,9 @@ interface StatisticsBoardProps {
     highlight?: boolean;
 }
 
-const TOTAL_DEMAND_BASE = 40000; // MW base demand assumption
+// Use actual sum of all consumption hubs' base demands (2023 peak data)
+// 55,250 + 29,050 + 24,650 + 16,460 + 5,691 + 14,490 + 10,260 + 4,910 + 4,908 = 165,669 MW
+const TOTAL_DEMAND_BASE = consumptionHubs.reduce((sum, h) => sum + h.baseDemand, 0);
 
 // Helper to get total active capacity across all plants
 const getTotalActiveCapacity = (plants: Plant[]): number =>
