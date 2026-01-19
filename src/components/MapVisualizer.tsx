@@ -170,6 +170,13 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
         // 2. Interconnection Flow Simulation (Relative Sufficiency Logic)
         // Power flows from Higher Sufficiency region to Lower Sufficiency region
         const flows: Record<string, number> = {}; // interconnectionId -> MW flow
+        
+        // Track nuclear flow between regions
+        // Key: regionId, Value: net nuclear import (positive = import, negative = export)
+        const nuclearFlows: Record<string, number> = {};
+        ['hokkaido', 'tohoku', 'tokyo', 'chubu', 'hokuriku', 'kansai', 'chugoku', 'shikoku', 'kyushu'].forEach(r => {
+            nuclearFlows[r] = 0;
+        });
 
         // Define all bidirectional potential paths
         // "id" is the forward direction ID in the SVG/Data
@@ -243,6 +250,14 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         flows[conn.id] = newFlow;
                         regionA.balance -= actualDelta;
                         regionB.balance += actualDelta;
+                        
+                        // Calculate nuclear component of the flow (A -> B)
+                        // Nuclear share = nuclear generation / total generation
+                        const totalGenA = regionA.gen + regionA.otherGen;
+                        const nuclearShareA = totalGenA > 0 ? regionA.gen / totalGenA : 0;
+                        const nuclearTransfer = actualDelta * nuclearShareA;
+                        nuclearFlows[conn.A] -= nuclearTransfer; // A exports nuclear
+                        nuclearFlows[conn.B] += nuclearTransfer; // B imports nuclear
 
                     } else {
                         // B is richer than A (Flow B -> A)
@@ -259,6 +274,13 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         flows[conn.id] = newFlow;
                         regionA.balance -= actualDelta; // -(-delta) = +delta (A gains)
                         regionB.balance += actualDelta; // +(-delta) = -delta (B loses)
+                        
+                        // Calculate nuclear component of the flow (B -> A)
+                        const totalGenB = regionB.gen + regionB.otherGen;
+                        const nuclearShareB = totalGenB > 0 ? regionB.gen / totalGenB : 0;
+                        const nuclearTransfer = Math.abs(actualDelta) * nuclearShareB;
+                        nuclearFlows[conn.B] -= nuclearTransfer; // B exports nuclear
+                        nuclearFlows[conn.A] += nuclearTransfer; // A imports nuclear
                     }
                 }
             });
@@ -271,9 +293,12 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             // Current Demand for this hub
             const currentDemand = hub.baseDemand * (0.5 + (gridLoad / 100));
 
-            // Nuclear Coverage = Nuclear Generation / Demand
-            // This shows what percentage of demand is covered by nuclear power specifically
-            const nuclearCoverage = currentDemand > 0 ? rb.gen / currentDemand : 0;
+            // Effective nuclear = local generation + imported nuclear via interconnections
+            const effectiveNuclear = rb.gen + (nuclearFlows[hub.regionId] || 0);
+            
+            // Nuclear Coverage = Effective Nuclear / Demand
+            // This shows what percentage of demand is covered by nuclear power (local + imported)
+            const nuclearCoverage = currentDemand > 0 ? Math.max(0, effectiveNuclear) / currentDemand : 0;
 
             // Total Sufficiency = (All Generation + Balance) / Demand
             // This is used for grid stress calculations
