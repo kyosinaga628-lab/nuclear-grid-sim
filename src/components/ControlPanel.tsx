@@ -40,8 +40,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <div className="slider-container">
                     <input
                         type="range"
-                        min="10"
-                        max="150"
+                        min="0"
+                        max="100"
+                        step="10"
                         value={gridLoad}
                         onChange={(e) => onSetGridLoad(Number(e.target.value))}
                         style={{
