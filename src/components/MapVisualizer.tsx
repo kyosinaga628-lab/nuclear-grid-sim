@@ -146,8 +146,10 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             if (regionalBalance[h.regionId]) {
                 regionalBalance[h.regionId].demand += currentDemand;
 
-                // Base non-nuclear generation (2024 actual data - when nuclear operates as current)
-                const baseOtherGen = h.baseDemand * h.nonNuclearRatio;
+                // Base non-nuclear generation tracks CURRENT demand (not peak)
+                // This allows thermal to back down as demand decreases,
+                // creating room for nuclear surplus to flow to other regions
+                const baseOtherGen = currentDemand * h.nonNuclearRatio;
                 regionalBalance[h.regionId].baseOtherGen += baseOtherGen;
 
                 // Apply thermal suppression: reduce thermal by THERMAL_SUPPRESSION_RATE * nuclear output
@@ -155,8 +157,8 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 const nuclearGen = regionalBalance[h.regionId].gen;
                 const thermalSuppression = nuclearGen * THERMAL_SUPPRESSION_RATE;
 
-                // otherGen cannot go below a minimum (hydro + renewables, roughly 20% of base)
-                const minOtherGen = h.baseDemand * 0.2; // Hydro/renewables floor
+                // otherGen cannot go below a minimum (hydro + renewables, roughly 20% of current demand)
+                const minOtherGen = currentDemand * 0.2; // Hydro/renewables floor
                 const adjustedOtherGen = Math.max(baseOtherGen - thermalSuppression, minOtherGen);
 
                 regionalBalance[h.regionId].otherGen += adjustedOtherGen;
