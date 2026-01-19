@@ -139,7 +139,10 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
 
         // Sum Demand per Region & Estimate Non-Nuclear Supply with Thermal Suppression
         consumptionHubs.forEach(h => {
-            const currentDemand = h.baseDemand * (0.5 + (gridLoad / 100));
+            // Demand scales from minimum (~37.4% of peak) to peak (100%)
+            // Grid Load 0% = ~62,000 MW (annual minimum), Grid Load 100% = ~165,669 MW (peak)
+            const MIN_DEMAND_RATIO = 0.374; // 62,000 / 165,669
+            const currentDemand = h.baseDemand * (MIN_DEMAND_RATIO + (gridLoad / 100) * (1 - MIN_DEMAND_RATIO));
             if (regionalBalance[h.regionId]) {
                 regionalBalance[h.regionId].demand += currentDemand;
 
@@ -170,7 +173,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
         // 2. Interconnection Flow Simulation (Relative Sufficiency Logic)
         // Power flows from Higher Sufficiency region to Lower Sufficiency region
         const flows: Record<string, number> = {}; // interconnectionId -> MW flow
-        
+
         // Track nuclear flow between regions
         // Key: regionId, Value: net nuclear import (positive = import, negative = export)
         const nuclearFlows: Record<string, number> = {};
@@ -250,7 +253,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         flows[conn.id] = newFlow;
                         regionA.balance -= actualDelta;
                         regionB.balance += actualDelta;
-                        
+
                         // Calculate nuclear component of the flow (A -> B)
                         // Nuclear share = nuclear generation / total generation
                         const totalGenA = regionA.gen + regionA.otherGen;
@@ -274,7 +277,7 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                         flows[conn.id] = newFlow;
                         regionA.balance -= actualDelta; // -(-delta) = +delta (A gains)
                         regionB.balance += actualDelta; // +(-delta) = -delta (B loses)
-                        
+
                         // Calculate nuclear component of the flow (B -> A)
                         const totalGenB = regionB.gen + regionB.otherGen;
                         const nuclearShareB = totalGenB > 0 ? regionB.gen / totalGenB : 0;
@@ -291,11 +294,13 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             const rb = regionalBalance[hub.regionId];
 
             // Current Demand for this hub
-            const currentDemand = hub.baseDemand * (0.5 + (gridLoad / 100));
+            // Demand scales from minimum (~37.4% of peak) to peak (100%)
+            const MIN_DEMAND_RATIO = 0.374;
+            const currentDemand = hub.baseDemand * (MIN_DEMAND_RATIO + (gridLoad / 100) * (1 - MIN_DEMAND_RATIO));
 
             // Effective nuclear = local generation + imported nuclear via interconnections
             const effectiveNuclear = rb.gen + (nuclearFlows[hub.regionId] || 0);
-            
+
             // Nuclear Coverage = Effective Nuclear / Demand
             // This shows what percentage of demand is covered by nuclear power (local + imported)
             const nuclearCoverage = currentDemand > 0 ? Math.max(0, effectiveNuclear) / currentDemand : 0;

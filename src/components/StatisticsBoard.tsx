@@ -47,7 +47,10 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
     const stats = useMemo(() => {
         const activeCapacity = getTotalActiveCapacity(plants);
 
-        const currentDemand = TOTAL_DEMAND_BASE * (0.5 + (gridLoad / 100)); // Demand varies 0.5x to 1.5x based on load
+        // Demand scales from minimum (~37.4% of peak) to peak (100%)
+        // Grid Load 0% = ~62,000 MW (annual minimum), Grid Load 100% = ~165,669 MW (peak)
+        const MIN_DEMAND_RATIO = 0.374; // 62,000 / 165,669
+        const currentDemand = TOTAL_DEMAND_BASE * (MIN_DEMAND_RATIO + (gridLoad / 100) * (1 - MIN_DEMAND_RATIO));
         const sufficiency = (activeCapacity / currentDemand) * 100;
 
         // CO2 Calculation: 0.5 tons per MWh (approx for Gas/Coal mix)
