@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { type Plant, getPlantActiveCapacity, getPlantCapacity, getPlantActiveCount } from '../data/plants';
+import { type Plant, getPlantActiveCapacity, getPlantActiveGeneration, getPlantCapacity, getPlantActiveCount } from '../data/plants';
 import { gridLines, consumptionHubs } from '../data/grid';
 
 // Helper to set color based on status
@@ -129,11 +129,11 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             regionalBalance[r] = { gen: 0, baseOtherGen: 0, otherGen: 0, demand: 0, balance: 0, sufficiency: 0 };
         });
 
-        // Sum Nuclear Generation per Region (using reactor data)
+        // Sum Nuclear Generation per Region (using reactor data with capacity factor)
         plants.forEach(p => {
-            const activeCapacity = getPlantActiveCapacity(p);
-            if (activeCapacity > 0 && regionalBalance[p.regionId]) {
-                regionalBalance[p.regionId].gen += activeCapacity;
+            const activeGeneration = getPlantActiveGeneration(p);
+            if (activeGeneration > 0 && regionalBalance[p.regionId]) {
+                regionalBalance[p.regionId].gen += activeGeneration;
             }
         });
 

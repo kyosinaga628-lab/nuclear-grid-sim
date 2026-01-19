@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { type Plant, getPlantActiveCapacity } from '../data/plants';
+import { type Plant, getPlantActiveCapacity, getPlantActiveGeneration } from '../data/plants';
 import { consumptionHubs } from '../data/grid';
 
 interface StatisticsBoardProps {
@@ -12,9 +12,13 @@ interface StatisticsBoardProps {
 // 55,250 + 29,050 + 24,650 + 16,460 + 5,691 + 14,490 + 10,260 + 4,910 + 4,908 = 165,669 MW
 const TOTAL_DEMAND_BASE = consumptionHubs.reduce((sum, h) => sum + h.baseDemand, 0);
 
-// Helper to get total active capacity across all plants
+// Helper to get total rated capacity across all plants (for display)
 const getTotalActiveCapacity = (plants: Plant[]): number =>
     plants.reduce((sum, p) => sum + getPlantActiveCapacity(p), 0);
+
+// Helper to get total generation with capacity factor (for calculations)
+const getTotalActiveGeneration = (plants: Plant[]): number =>
+    plants.reduce((sum, p) => sum + getPlantActiveGeneration(p), 0);
 
 const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, highlight }) => {
 
@@ -24,16 +28,16 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
     // Update accumulation every second
     React.useEffect(() => {
         const timer = setInterval(() => {
-            // Calculate active capacity for this tick
-            const activeCapacity = getTotalActiveCapacity(plants);
+            // Calculate active generation (with capacity factor) for this tick
+            const activeGeneration = getTotalActiveGeneration(plants);
 
             // Assumptions:
             // CO2: 0.5 kg/kWh (Gas/Coal mix replacement)
             // Cost: 10 JPY/kWh (Fuel cost difference)
             // Calculation: MW * 1000 (kW) * Coeff * (1s / 3600s)
 
-            const co2PerSec = activeCapacity * 1000 * 0.5 / 3600;
-            const costPerSec = activeCapacity * 1000 * 10 / 3600;
+            const co2PerSec = activeGeneration * 1000 * 0.5 / 3600;
+            const costPerSec = activeGeneration * 1000 * 10 / 3600;
 
             setAccumulated(prev => ({
                 co2: prev.co2 + co2PerSec,
@@ -45,20 +49,21 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
     }, [plants]);
 
     const stats = useMemo(() => {
-        const activeCapacity = getTotalActiveCapacity(plants);
+        const activeCapacity = getTotalActiveCapacity(plants); // Rated capacity (for display)
+        const activeGeneration = getTotalActiveGeneration(plants); // With 80% factor (for calculation)
 
         // Demand scales from minimum (~37.4% of peak) to peak (100%)
         // Grid Load 0% = ~62,000 MW (annual minimum), Grid Load 100% = ~165,669 MW (peak)
         const MIN_DEMAND_RATIO = 0.374; // 62,000 / 165,669
         const currentDemand = TOTAL_DEMAND_BASE * (MIN_DEMAND_RATIO + (gridLoad / 100) * (1 - MIN_DEMAND_RATIO));
-        const sufficiency = (activeCapacity / currentDemand) * 100;
+        const sufficiency = (activeGeneration / currentDemand) * 100; // Use generation for sufficiency
 
         // CO2 Calculation: 0.5 tons per MWh (approx for Gas/Coal mix)
         // Savings per hour
-        const co2SavingsPerHour = activeCapacity * 0.5;
+        const co2SavingsPerHour = activeGeneration * 0.5;
 
         return {
-            activeCapacity,
+            activeCapacity, // Display rated capacity
             currentDemand,
             sufficiency,
             co2SavingsPerHour
