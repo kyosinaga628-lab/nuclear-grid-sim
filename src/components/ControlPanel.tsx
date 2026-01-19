@@ -41,7 +41,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                     <input
                         type="range"
                         min="0"
-                        max="150"
+                        max="120"
                         step="10"
                         value={gridLoad}
                         onChange={(e) => onSetGridLoad(Number(e.target.value))}
