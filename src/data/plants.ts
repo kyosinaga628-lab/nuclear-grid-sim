@@ -249,13 +249,19 @@ export const plants: Plant[] = [
 ];
 
 // Helper functions
+
+// Capacity factor: typical nuclear plant operates at ~80% of rated capacity
+// Due to maintenance, refueling, and load following
+export const CAPACITY_FACTOR = 0.80;
+
 export const getPlantCapacity = (plant: Plant): number =>
   plant.reactors.reduce((sum, r) => sum + r.capacity, 0);
 
 export const getPlantActiveCapacity = (plant: Plant): number =>
   plant.reactors
     .filter(r => r.status === 'Active')
-    .reduce((sum, r) => sum + r.capacity, 0);
+    .reduce((sum, r) => sum + r.capacity * CAPACITY_FACTOR, 0);
 
 export const getPlantActiveCount = (plant: Plant): number =>
   plant.reactors.filter(r => r.status === 'Active').length;
+
