@@ -54,7 +54,20 @@ const MovingPolyline: React.FC<{
     const lineRef = React.useRef<any>(null);
 
     React.useEffect(() => {
-        if (!isActive || !lineRef.current) return;
+        if (!lineRef.current) return;
+
+        // Get the SVG element
+        const leafletLayer = lineRef.current;
+        const el = leafletLayer?._path || leafletLayer?.getElement?.();
+
+        if (!isActive) {
+            // Reset to solid line when not active
+            if (el) {
+                el.style.strokeDasharray = '';
+                el.style.strokeDashoffset = '0';
+            }
+            return;
+        }
 
         let animationFrameId: number;
         let offset = 0;
@@ -90,6 +103,11 @@ const MovingPolyline: React.FC<{
         return () => {
             cancelAnimationFrame(animationFrameId);
             clearTimeout(timeoutId);
+            // Reset to solid line on cleanup
+            if (el) {
+                el.style.strokeDasharray = '';
+                el.style.strokeDashoffset = '0';
+            }
         };
     }, [isActive, isReverse, flowSpeed]);
 
