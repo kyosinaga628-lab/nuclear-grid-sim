@@ -2,7 +2,8 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#0d0d0d" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nuclear Grid Simulator｜日本の原子力発電所と電力系統（グリッド）のシミュレーター</title>
     <meta name="description" content="日本の原子力発電所の稼働・停止を切り替え、電力需要や地域間の電力融通、CO2削減量の変化をリアルタイムで確認できるインタラクティブな電力系統シミュレーター。" />
@@ -42,13 +43,18 @@
       "operatingSystem": "Web Browser",
       "inLanguage": "ja",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
-      "author": { "@type": "Person", "name": "enepen", "url": "https://enepen.vercel.app/" },
+      "author": { "@type": "Organization", "name": "enepen", "url": "https://enepen.vercel.app/" },
       "isPartOf": { "@type": "WebSite", "name": "enepen", "url": "https://enepen.vercel.app/" }
     }
     </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Nuclear Grid Simulator｜日本の原子力発電所と電力系統のシミュレーター</h1>
+      <p>日本の原子力発電所の稼働・停止を切り替え、電力需要や地域間の電力融通、CO2削減量の変化を確認できるインタラクティブな電力系統シミュレーターです。ご利用にはJavaScriptを有効にしてください。</p>
+      <p>運営: <a href="https://enepen.vercel.app/">enepen</a></p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -92,7 +92,7 @@ const StatisticsBoard: React.FC<StatisticsBoardProps> = ({ plants, gridLoad, hig
             <div className="stat-card">
                 <div className="stat-label">CO2 Avoided (vs Thermal)</div>
                 <div className="stat-value text-blue">{Math.round(stats.co2SavingsPerHour).toLocaleString()} <span className="unit">t-CO2/h</span></div>
-                <div className="stat-desc">Equivalent to {(stats.co2SavingsPerHour / 0.14).toLocaleString()} cars off road</div>
+                <div className="stat-desc">Equivalent to {Math.round(stats.co2SavingsPerHour / 0.14).toLocaleString()} cars off road</div>
             </div>
 
             <div className="stat-card" style={{ borderLeft: '3px solid #f87171' }}>

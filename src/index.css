@@ -278,7 +278,8 @@ body {
   .overlay-ui {
     top: 10px;
     left: 10px;
-    right: 10px;
+    /* leave room for the tutorial / help buttons in the top-right corner */
+    right: 104px;
     max-width: none;
     width: auto;
     padding: 12px;
@@ -289,9 +290,17 @@ body {
     margin-bottom: 8px;
   }
 
+  .overlay-desc {
+    display: none;
+  }
+
+  .dashboard-layout .tutorial-bubble {
+    display: none;
+  }
+
   .legend-ui {
-    bottom: 80px;
-    /* moved up a bit to avoid overlapping attribution/other controls */
+    /* the map is only half the screen on mobile, so stay just above the attribution */
+    bottom: 24px;
     right: 10px;
     padding: 8px;
     width: 140px;

@@ -350,10 +350,17 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
                 zoomControl={false}
             >
                 <MapController />
+                {/* CARTO now requires an API key and watermarks anonymous tiles,
+                    so use Esri's key-free Dark Gray Canvas (base + label overlay). */}
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    opacity={0.9} // Slight transparency to let the lighter background bleed through if needed, or just keep it solid
+                    attribution='&copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, HERE, Garmin, &copy; OpenStreetMap contributors'
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                    maxNativeZoom={16}
+                    opacity={0.9}
+                />
+                <TileLayer
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+                    maxNativeZoom={16}
                 />
 
                 {/* Grid Lines */}
@@ -515,10 +522,9 @@ const MapVisualizer: React.FC<{ plants: Plant[], gridLoad: number, onTogglePlant
             </MapContainer>
 
             {/* Info Overlay */}
-            {/* Info Overlay */}
             <div className="overlay-ui">
-                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', verticalAlign: 'middle' }}>V3.1</span></h1>
-                <div style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
+                <h1>Japan Nuclear Grid <span style={{ fontSize: '0.6em', background: '#3b82f6', padding: '2px 6px', borderRadius: '4px', color: 'white', WebkitTextFillColor: 'white', verticalAlign: 'middle' }}>V3.1</span></h1>
+                <div className="overlay-desc" style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '16px' }}>
                     Live visualization of nuclear power capacity and transmission topology.
                 </div>
 

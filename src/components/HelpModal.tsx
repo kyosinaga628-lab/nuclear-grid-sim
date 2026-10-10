@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './HelpModal.css';
 
 interface HelpModalProps {
@@ -7,12 +7,21 @@ interface HelpModalProps {
 }
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>×</button>
+            <div className="modal-content" role="dialog" aria-modal="true" aria-label="Grid Simulator ガイド" onClick={e => e.stopPropagation()}>
+                <button className="modal-close" onClick={onClose} aria-label="閉じる">×</button>
                 <h2>Grid Simulator ガイド</h2>
 
                 <div className="modal-section">

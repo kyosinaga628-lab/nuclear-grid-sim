@@ -48,8 +48,8 @@
 /* Slider */
 .slider-container {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .grid-slider {

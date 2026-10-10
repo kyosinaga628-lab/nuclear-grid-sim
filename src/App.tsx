@@ -180,6 +180,7 @@ function App() {
             style={{ position: 'static' }}
             onClick={startTutorial}
             title="チュートリアルを開始"
+            aria-label="チュートリアルを開始"
           >
             🎓
           </button>
@@ -189,6 +190,7 @@ function App() {
           style={{ position: 'static' }}
           onClick={() => setIsHelpOpen(true)}
           title="使い方ガイド"
+          aria-label="使い方ガイド"
         >
           ?
         </button>

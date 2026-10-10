@@ -40,6 +40,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 <div className="slider-container">
                     <input
                         type="range"
+                        aria-label="Grid Load (Demand)"
                         min="0"
                         max="120"
                         step="10"
