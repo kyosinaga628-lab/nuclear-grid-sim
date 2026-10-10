@@ -206,6 +206,9 @@ function App() {
           onReset={handleReset}
           highlightLoadControl={tutorialStep === 3}
         />
+        <a className="site-credit" href="https://enepen.vercel.app/" target="_blank" rel="noopener">
+          enepen｜エネルギー・金融の可視化ツール集
+        </a>
       </div>
 
       <div className="main-view">

@@ -45,6 +45,14 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         東京・中部間などで双方向の電力融通が観察できます。
                     </p>
                 </div>
+
+                <div className="modal-section">
+                    <h3>🔗 関連サイト</h3>
+                    <p>
+                        <a href="https://enepen.vercel.app/" target="_blank" rel="noopener" style={{ color: '#60a5fa' }}>enepen</a>
+                        ：エネルギー・金融・データ可視化のツール集
+                    </p>
+                </div>
             </div>
         </div>
     );
